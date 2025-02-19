@@ -9,13 +9,13 @@ Builddit provides a streamlined interface for browsing and interacting with buil
 ## Features
 
 ### MVP Features
-- [ ] Browse build requests from `/someone-build` channel
-  - [ ] View text posts with author information
-  - [ ] Sort by Newest and Top
-  - [ ] Periodic polling for new posts (5-minute intervals)
-- [ ] Authentication
-  - [ ] Sign in with Farcaster (Auth Kit integration)
-  - [ ] Public browsing without authentication
+- [x] Browse build requests from `/someone-build` channel
+  - [x] View text posts with author information
+  - [x] Sort by Newest and Top
+  - [x] Periodic polling for new posts (5-minute intervals)
+- [x] Authentication
+  - [x] Sign in with Farcaster (Auth Kit integration)
+  - [x] Public browsing without authentication
 - [ ] Build Claims
   - [ ] Authenticated users can claim builds
   - [ ] Claims posted as quote casts on Farcaster
@@ -47,19 +47,43 @@ Builddit provides a streamlined interface for browsing and interacting with buil
 #### Build Request
 ```typescript
 interface BuildRequest {
-  id: string;                // Unique identifier
-  castId: string;           // Original Farcaster cast ID
+  hash: string;              // Unique identifier (Farcaster cast hash)
+  text: string;             // Post content
+  timestamp: string;        // Creation timestamp
   author: {
-    fid: string;            // Farcaster ID
-    username: string;       // Farcaster username
+    fid: number;           // Farcaster ID
+    username: string;      // Farcaster username
+    display_name: string;  // Display name
+    pfp_url: string;      // Profile picture URL
   };
-  content: string;          // Post content
-  timestamp: Date;          // Creation timestamp
-  claims: Claim[];          // Array of claims
-  metrics: {
-    likes: number;
-    recasts: number;
+  reactions: {
+    likes_count: number;
+    recasts_count: number;
+    likes: Array<{ fid: number; fname?: string }>;
+    recasts: Array<{ fid: number; fname?: string }>;
   };
+  replies: {
+    count: number;
+  };
+  embeds: Array<{
+    url?: string;
+    cast_id?: {
+      fid: number;
+      hash: string;
+    };
+    cast?: EmbeddedCast;
+    metadata?: {
+      html?: {
+        ogTitle?: string;
+        ogDescription?: string;
+        ogImage?: Array<{
+          url: string;
+          width?: string;
+          height?: string;
+        }>;
+      };
+    };
+  }>;
 }
 ```
 
@@ -124,10 +148,80 @@ interface Claim {
 ## Progress Tracking
 
 ### Current Sprint
-- [ ] Project setup
-- [ ] Auth Kit integration
-- [ ] Basic build request listing
+- [x] Project setup
+- [x] Auth Kit integration
+- [x] Basic build request listing
+- [x] Zod schema validation
+- [x] Neynar API integration
+- [ ] Build claims implementation
 
 ### Completed
 - [x] Initial project planning
 - [x] Technical specification
+- [x] Authentication flow
+- [x] Data fetching and caching
+- [x] Real-time polling
+- [x] Error handling and validation
+
+## Upcoming Tasks
+
+### Data Synchronization & Polling
+- [x] Fix Neynar API client method names to match SDK v2.13.1
+  - [x] Add type definitions for Neynar SDK methods
+  - [x] Implement rate limiting and error handling
+  - [x] Add data transformation layer
+- [x] Set up automatic polling service startup with app
+  - [x] Create app initialization hook
+  - [x] Add graceful shutdown handling
+  - [x] Implement health checks
+- [x] Add monitoring and logging for polling service
+  - [x] Track successful/failed API calls
+  - [x] Monitor rate limits
+  - [x] Log sync statistics
+  - [x] Set up error alerting
+- [ ] Create admin API endpoints for polling control
+  - [ ] Start/stop polling
+  - [ ] Adjust polling interval
+  - [ ] Force immediate sync
+  - [ ] View sync status and metrics
+
+### Caching Improvements
+- [x] Implement in-memory caching with node-cache
+  - [x] Add cache manager singleton
+  - [x] Set up TTL for different data types
+  - [x] Add cache invalidation
+- [ ] Add Redis for distributed caching
+  - [ ] Set up Redis connection
+  - [ ] Migrate from node-cache
+  - [ ] Add cache replication
+- [ ] Add cache warming on app startup
+- [ ] Implement advanced cache strategies
+  - [ ] Stale-while-revalidate
+  - [ ] Cache prefetching
+  - [ ] Cache versioning
+
+### Database Optimization
+- [x] Set up MongoDB schemas and indexes
+  - [x] User model with FID indexing
+  - [x] BuildRequest model with compound indexes
+  - [x] EngagementScore model for analytics
+- [ ] Add database connection pooling
+- [ ] Implement query optimization
+  - [ ] Add query analysis
+  - [ ] Optimize index usage
+  - [ ] Implement data aggregation
+- [ ] Set up database monitoring
+  - [ ] Monitor query performance
+  - [ ] Track connection pool usage
+  - [ ] Set up slow query logging
+
+### Monitoring & Logging
+- [ ] Set up structured logging
+  - [ ] Add request/response logging
+  - [ ] Implement error tracking
+  - [ ] Add performance metrics
+- [ ] Create monitoring dashboard
+  - [ ] API endpoint metrics
+  - [ ] Cache performance
+  - [ ] Database metrics
+  - [ ] System health

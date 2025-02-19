@@ -2,9 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { AuthButton } from '@/components/AuthButton';
+import { BuildRequestCard } from '@/components/BuildRequestCard';
+import { fetchBuildRequests } from '@/lib/api/client';
+import type { BuildRequest } from '@/lib/api/types';
 
 export default function Page() {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [buildRequests, setBuildRequests] = useState<BuildRequest[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -18,40 +24,27 @@ export default function Page() {
         return () => window.removeEventListener('mousemove', handleMouseMove);
     }, []);
 
-    const [posts, setPosts] = useState([
-        {
-            id: 1,
-            author: 'cryptoBuilder',
-            title: 'A decentralized pet sitting marketplace',
-            content:
-                'Would love to see someone build a marketplace where people can find trusted pet sitters using web3 reputation.',
-            votes: 145,
-            comments: 23,
-            claimed: false,
-            timestamp: '2h ago',
-        },
-        {
-            id: 2,
-            author: 'web3maker',
-            title: 'On-chain recipe book with NFT certificates',
-            content:
-                'A platform where chefs can publish their recipes as NFTs and users can collect them.',
-            votes: 89,
-            comments: 12,
-            claimed: true,
-            timestamp: '5h ago',
-        },
-        {
-            id: 3,
-            author: 'buildoor',
-            title: 'Decentralized babysitting DAO',
-            content: 'A DAO where parents can find verified babysitters with on-chain reputation.',
-            votes: 234,
-            comments: 45,
-            claimed: false,
-            timestamp: '1d ago',
-        },
-    ]);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setIsLoading(true);
+                const response = await fetchBuildRequests();
+                setBuildRequests(response.buildRequests);
+                setError(null);
+            } catch (err) {
+                console.error('Error fetching build requests:', err);
+                setError('Failed to load build requests');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+
+        const pollInterval = setInterval(fetchData, 5 * 60 * 1000);
+
+        return () => clearInterval(pollInterval);
+    }, []);
 
     return (
         <div
@@ -163,140 +156,30 @@ export default function Page() {
 
                 {/* Posts List */}
                 <div className="space-y-6" data-oid="j:wj6o.">
-                    {posts.map((post) => (
-                        <div
-                            key={post.id}
-                            className="group relative bg-gradient-to-b from-purple-800 to-purple-800/50 rounded-xl p-6 shadow-xl backdrop-blur-sm border border-purple-700/50 hover:border-yellow-400/50 transition-all duration-300"
-                            data-oid=":f50aq_"
-                        >
-                            <div className="relative" data-oid="7:o2-hr">
-                                <div className="flex items-start space-x-4" data-oid="dazdbjh">
-                                    {/* Voting */}
-                                    <div
-                                        className="flex flex-col items-center space-y-1"
-                                        data-oid="bukfcej"
-                                    >
-                                        <button
-                                            className="text-purple-400/70 hover:text-yellow-400 transition-colors duration-200"
-                                            data-oid="kvwsazu"
-                                        >
-                                            <svg
-                                                className="w-6 h-6"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                                data-oid="xl7l353"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M5 15l7-7 7 7"
-                                                    data-oid="94xg-kr"
-                                                />
-                                            </svg>
-                                        </button>
-                                        <span className="text-white font-bold" data-oid="u5r23z3">
-                                            {post.votes}
-                                        </span>
-                                        <button
-                                            className="text-gray-400 hover:text-yellow-400"
-                                            data-oid="n_lpt:t"
-                                        >
-                                            <svg
-                                                className="w-6 h-6"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                                data-oid="ptma9p5"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M19 9l-7 7-7-7"
-                                                    data-oid="npc5qpy"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
-
-                                    {/* Post Content */}
-                                    <div className="flex-1" data-oid="lghduy_">
-                                        <h3
-                                            className="text-xl font-bold text-white mb-2"
-                                            data-oid="9ml8e2p"
-                                        >
-                                            {post.title}
-                                        </h3>
-                                        <p className="text-purple-200 mb-4" data-oid="-oxb2kc">
-                                            {post.content}
-                                        </p>
-                                        <div
-                                            className="flex items-center justify-between"
-                                            data-oid="35tb.jh"
-                                        >
-                                            <div
-                                                className="flex items-center space-x-4 text-purple-300"
-                                                data-oid=":tuj9_u"
-                                            >
-                                                <span data-oid="lhu1rcm">by {post.author}</span>
-                                                <span data-oid="ao.yn7h">•</span>
-                                                <span data-oid="qqoe9gj">{post.timestamp}</span>
-                                                <span data-oid=".cd0mn:">•</span>
-                                                <button
-                                                    className="hover:text-white"
-                                                    data-oid="luihoie"
-                                                >
-                                                    {post.comments} comments
-                                                </button>
-                                            </div>
-                                            {!post.claimed ? (
-                                                <button
-                                                    className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg bg-gradient-to-r from-emerald-400 to-emerald-300 p-[2px] font-medium text-emerald-900 shadow-xl shadow-emerald-400/20 transition-all duration-300 hover:shadow-emerald-400/40"
-                                                    data-oid="6grke4l"
-                                                >
-                                                    <span
-                                                        className="relative flex items-center space-x-2 rounded-lg bg-gradient-to-r from-emerald-400 to-emerald-300 px-6 py-2.5 transition-all duration-200 ease-out group-hover:bg-opacity-0 group-hover:from-emerald-300 group-hover:to-emerald-200"
-                                                        data-oid="qcu03mf"
-                                                    >
-                                                        <svg
-                                                            className="w-4 h-4"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            viewBox="0 0 24 24"
-                                                            data-oid="s3uu:m7"
-                                                        >
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                strokeWidth="2"
-                                                                d="M14 5l7 7m0 0l-7 7m7-7H3"
-                                                                data-oid="tnxaitv"
-                                                            />
-                                                        </svg>
-                                                        <span
-                                                            className="font-medium"
-                                                            data-oid="z5cw67l"
-                                                        >
-                                                            I Built This!
-                                                        </span>
-                                                    </span>
-                                                </button>
-                                            ) : (
-                                                <span
-                                                    className="inline-flex items-center px-6 py-2.5 rounded-lg bg-purple-900/50 text-purple-300 border border-purple-700/50 backdrop-blur-sm"
-                                                    data-oid="u0up.49"
-                                                >
-                                                    Already Built
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    {isLoading ? (
+                        <div className="text-center py-8">
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-300 border-t-transparent"></div>
+                            <p className="mt-2 text-purple-300">Loading build requests...</p>
                         </div>
-                    ))}
+                    ) : error ? (
+                        <div className="text-center py-8">
+                            <p className="text-red-400">{error}</p>
+                            <button 
+                                onClick={() => window.location.reload()}
+                                className="mt-4 text-purple-300 hover:text-white"
+                            >
+                                Try again
+                            </button>
+                        </div>
+                    ) : buildRequests.length === 0 ? (
+                        <div className="text-center py-8">
+                            <p className="text-purple-300">No build requests found</p>
+                        </div>
+                    ) : (
+                        buildRequests.map((request) => (
+                            <BuildRequestCard key={request.hash} buildRequest={request} />
+                        ))
+                    )}
                 </div>
             </main>
 
