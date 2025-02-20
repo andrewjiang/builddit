@@ -1,13 +1,14 @@
 import { neynarClient } from '@/lib/api/neynar';
-import { cacheManager } from '@/lib/cache';
+import { cacheService } from '@/lib/cache';
 import { connectToDatabase } from '@/lib/db/connect';
 import { BuildRequest, IBuildRequest } from '@/lib/db/models/BuildRequest';
-import { User, IUser } from '@/lib/db/models/User';
+import { FarcasterUser, IFarcasterUser } from '@/lib/db/models/User';
 import { EngagementScore, IEngagementScore } from '@/lib/db/models/EngagementScore';
 import { Model } from 'mongoose';
+import { BuildRequestSchema } from '@/lib/api/types';
 
-interface UserModel extends Model<IUser> {
-  upsertUser(userData: Partial<IUser>): Promise<IUser>;
+interface FarcasterUserModel extends Model<IFarcasterUser> {
+  upsertUser(userData: Partial<IFarcasterUser>): Promise<IFarcasterUser>;
 }
 
 interface BuildRequestModel extends Model<IBuildRequest> {
@@ -58,11 +59,15 @@ export class PollingService {
         username: cast.author.username,
         displayName: cast.author.display_name,
         pfp: {
-          url: cast.author.pfp_url,
+          url: cast.author.pfp_url || '',
           verified: true,
         },
+        lastUpdated: new Date(),
       };
-      await (User as UserModel).upsertUser(authorData);
+
+      // Update cache and database
+      cacheService.setFarcasterUser(cast.author.fid, authorData);
+      await (FarcasterUser as FarcasterUserModel).upsertUser(authorData);
 
       // Sync build request
       const buildRequestData = {
@@ -85,11 +90,26 @@ export class PollingService {
         mentions: cast.mentioned_profiles.map((p: any) => p.username),
         embeds: cast.embeds.map((e: any) => ({
           url: e.url,
-          type: e.type,
+          cast_id: e.cast_id,
+          cast: e.cast && {
+            author: {
+              fid: e.cast.author.fid,
+              username: e.cast.author.username,
+              displayName: e.cast.author.display_name,
+              pfpUrl: e.cast.author.pfp_url,
+            },
+            text: e.cast.text,
+            hash: e.cast.hash,
+            timestamp: e.cast.timestamp,
+            embeds: e.cast.embeds,
+          },
+          metadata: e.metadata,
+          type: e.cast_id ? 'cast' : 'url',
         })),
       };
 
       const buildRequest = await (BuildRequest as BuildRequestModel).upsertBuildRequest(buildRequestData);
+      cacheService.setBuildRequest(buildRequest.hash, buildRequest);
 
       // Update engagement scores
       const now = new Date();
@@ -153,7 +173,7 @@ export class PollingService {
       );
 
       // Update cache
-      cacheManager.setLatestBuildRequests(buildRequests);
+      cacheService.setLatestBuildRequests(buildRequests);
 
       // Reset retry count on success
       this.retryAttempt = 0;

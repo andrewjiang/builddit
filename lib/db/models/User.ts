@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IUser extends Document {
+export interface IFarcasterUser extends Document {
   fid: number;
   username: string;
   displayName: string;
@@ -21,7 +21,7 @@ export interface IUser extends Document {
   lastUpdated: Date;
 }
 
-const UserSchema = new Schema<IUser>(
+const FarcasterUserSchema = new Schema<IFarcasterUser>(
   {
     fid: { type: Number, required: true, unique: true },
     username: { type: String, required: true },
@@ -48,12 +48,12 @@ const UserSchema = new Schema<IUser>(
 );
 
 // Indexes
-UserSchema.index({ fid: 1 });
-UserSchema.index({ username: 1 });
-UserSchema.index({ lastUpdated: 1 });
+FarcasterUserSchema.index({ fid: 1 });
+FarcasterUserSchema.index({ username: 1 });
+FarcasterUserSchema.index({ lastUpdated: 1 });
 
-// Create or update a user
-UserSchema.statics.upsertUser = async function (userData: Partial<IUser>) {
+// Static methods
+FarcasterUserSchema.statics.upsertUser = async function (userData: Partial<IFarcasterUser>) {
   const { fid, ...rest } = userData;
   if (!fid) throw new Error('FID is required for user upsert');
 
@@ -64,4 +64,4 @@ UserSchema.statics.upsertUser = async function (userData: Partial<IUser>) {
   );
 };
 
-export const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema); 
+export const FarcasterUser = mongoose.models.FarcasterUser || mongoose.model<IFarcasterUser>('FarcasterUser', FarcasterUserSchema); 

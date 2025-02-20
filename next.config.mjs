@@ -28,6 +28,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**.pinata.cloud',
       },
+      {
+        protocol: 'https',
+        hostname: '**.mypinata.cloud',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.imgur.com',
+      }
     ],
   }
 };

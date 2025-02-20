@@ -1,86 +1,249 @@
 import { NextResponse } from 'next/server';
-import { BuildRequestSchema } from '@/lib/api/types';
+import { BuildRequestSchema, BuildRequest as BuildRequestType } from '@/lib/api/types';
+import { connectToDatabase } from '@/lib/db/connect';
+import { BuildRequest } from '@/lib/db/models/BuildRequest';
+import { neynarClient } from '@/lib/api/neynar';
+import { IBuildRequest } from '@/lib/db/models/BuildRequest';
+import { Document, FlattenMaps, SortOrder, Model } from 'mongoose';
+import { SortOption } from '@/components/FilterBar';
+import { FarcasterUser, IFarcasterUser } from '@/lib/db/models/User';
+
+interface FarcasterUserModel extends Model<IFarcasterUser> {
+    upsertUser(userData: Partial<IFarcasterUser>): Promise<IFarcasterUser>;
+}
+
+type MongoDBBuildRequest = FlattenMaps<IBuildRequest> & { _id: unknown; __v: number };
 
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const cursor = searchParams.get('cursor');
         const limit = parseInt(searchParams.get('limit') || '25', 10);
-        const timeWindow = searchParams.get('timeWindow') as 'day' | 'week' | 'month' | null;
+        const sort = searchParams.get('sort') as SortOption || 'top_day';
+        const search = searchParams.get('search') || '';
 
-        console.log('Fetching casts with params:', {
+        console.log('Fetching build requests with params:', {
             cursor,
             limit,
-            timeWindow,
+            sort,
+            search,
         });
 
-        const url = `https://api.neynar.com/v2/farcaster/feed/channels?channel_ids=someone-build&with_recasts=true&with_replies=false&members_only=true&limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`;
-        
-        console.log('Fetching from URL:', url);
+        // Connect to MongoDB
+        await connectToDatabase();
 
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'accept': 'application/json',
-                'x-api-key': process.env.NEYNAR_API_KEY || '',
-            },
-        });
+        let buildRequests: Omit<IBuildRequest, keyof Document>[] = [];
+        let nextCursor: string | undefined;
 
-        if (!response.ok) {
-            console.error('API Error:', {
-                status: response.status,
-                statusText: response.statusText,
-                text: await response.text(),
-            });
-            throw new Error(`API responded with status: ${response.status}`);
+        try {
+            // Determine time window based on sort option
+            const now = Date.now();
+            const timeWindow = sort.startsWith('top_') ? sort.split('_')[1] : null;
+            const timeWindowMs = timeWindow ? {
+                day: 24 * 60 * 60 * 1000,        // 1 day
+                week: 7 * 24 * 60 * 60 * 1000,   // 1 week
+                month: 30 * 24 * 60 * 60 * 1000, // 1 month
+                all: Number.MAX_SAFE_INTEGER,    // All time
+            }[timeWindow] : null;
+
+            // Build query
+            const query: Record<string, any> = {};
+            
+            // Add time window filter
+            if (timeWindowMs) {
+                query.publishedAt = {
+                    $gte: new Date(now - timeWindowMs)
+                };
+            }
+
+            // Add cursor-based pagination
+            if (cursor) {
+                query.publishedAt = {
+                    ...(query.publishedAt || {}),
+                    $lt: new Date(cursor)
+                };
+            }
+
+            // Add search filter
+            if (search) {
+                query.$or = [
+                    { text: { $regex: search, $options: 'i' } },
+                    { 'author.username': { $regex: search, $options: 'i' } },
+                    { 'author.displayName': { $regex: search, $options: 'i' } },
+                ];
+            }
+
+            // Determine sort order
+            const sortOrder: { [key: string]: SortOrder } = sort === 'newest' 
+                ? { publishedAt: -1 }
+                : { 
+                    'engagement.likes': -1, 
+                    'engagement.recasts': -1, 
+                    publishedAt: -1 
+                };
+
+            const mongoResults = await BuildRequest.find(query)
+                .sort(sortOrder)
+                .limit(limit + 1)
+                .lean();
+
+            buildRequests = (mongoResults as MongoDBBuildRequest[]).map(doc => ({
+                hash: doc.hash,
+                text: doc.text,
+                publishedAt: doc.publishedAt,
+                author: {
+                    fid: doc.author.fid,
+                    username: doc.author.username,
+                    displayName: doc.author.displayName,
+                    pfpUrl: doc.author.pfpUrl,
+                },
+                engagement: {
+                    likes: doc.engagement.likes,
+                    recasts: doc.engagement.recasts,
+                    replies: doc.engagement.replies,
+                    watches: doc.engagement.watches,
+                },
+                parentHash: doc.parentHash || '',
+                mentions: doc.mentions,
+                embeds: doc.embeds.map(embed => ({
+                    url: embed.url,
+                    cast_id: embed.cast_id,
+                    cast: embed.cast && {
+                        author: {
+                            fid: embed.cast.author.fid,
+                            username: embed.cast.author.username,
+                            displayName: embed.cast.author.displayName,
+                            pfpUrl: embed.cast.author.pfpUrl,
+                        },
+                        text: embed.cast.text,
+                        hash: embed.cast.hash,
+                        timestamp: embed.cast.timestamp,
+                        embeds: embed.cast.embeds,
+                    },
+                    metadata: embed.metadata,
+                    type: embed.type,
+                })),
+                lastUpdated: doc.lastUpdated,
+            }));
+
+            // If we got results from MongoDB
+            if (buildRequests.length > 0) {
+                // If we got more results than the limit, set the next cursor
+                if (buildRequests.length > limit) {
+                    const lastItem = buildRequests[buildRequests.length - 2];
+                    nextCursor = lastItem.publishedAt.toISOString();
+                    buildRequests = buildRequests.slice(0, -1);
+                }
+
+                return NextResponse.json({
+                    buildRequests,
+                    next: nextCursor ? { cursor: nextCursor } : undefined
+                });
+            }
+        } catch (dbError) {
+            console.error('MongoDB Error:', dbError);
+            // Continue to Neynar fallback
         }
 
-        const data = await response.json();
-        console.log('Raw API Response:', JSON.stringify(data, null, 2));
-
-        let buildRequests = [];
+        // Fallback to Neynar if MongoDB is empty or fails
+        console.log('Falling back to Neynar API');
         
-        for (const cast of data.casts || []) {
+        const response = await neynarClient.fetchBuildRequests(cursor || undefined, limit);
+        buildRequests = [];
+        
+        for (const cast of response.casts || []) {
             try {
-                const parsed = BuildRequestSchema.parse({
-                    ...cast,
-                });
-                buildRequests.push(parsed);
+                const parsed = BuildRequestSchema.parse(cast);
+                
+                // Store the author information in FarcasterUser collection
+                if (parsed.author.username && parsed.author.display_name) {
+                    await (FarcasterUser as FarcasterUserModel).upsertUser({
+                        fid: parsed.author.fid,
+                        username: parsed.author.username,
+                        displayName: parsed.author.display_name,
+                        pfp: {
+                            url: parsed.author.pfp_url || '',
+                            verified: true, // We can update this later if needed
+                        },
+                        lastUpdated: new Date()
+                    });
+                }
+
+                // Skip casts where required fields are missing
+                if (!parsed.author.username || !parsed.author.display_name) {
+                    console.warn('Skipping cast with missing author information:', parsed.hash);
+                    continue;
+                }
+
+                const buildRequest: Omit<IBuildRequest, keyof Document> = {
+                    hash: parsed.hash,
+                    text: parsed.text,
+                    publishedAt: new Date(parsed.timestamp),
+                    author: {
+                        fid: parsed.author.fid,
+                        username: parsed.author.username,
+                        displayName: parsed.author.display_name,
+                        pfpUrl: parsed.author.pfp_url || '',
+                    },
+                    engagement: {
+                        likes: parsed.reactions.likes_count,
+                        recasts: parsed.reactions.recasts_count,
+                        replies: parsed.replies.count,
+                        watches: 0,
+                    },
+                    parentHash: parsed.parent_hash || '',
+                    mentions: parsed.mentioned_profiles
+                        .filter(p => p.username)
+                        .map(p => p.username as string),
+                    embeds: parsed.embeds.map(e => ({
+                        url: e.url,
+                        cast_id: e.cast_id,
+                        cast: e.cast,
+                        metadata: e.metadata,
+                        type: e.cast_id ? 'cast' : 'url',
+                    })),
+                    lastUpdated: new Date(),
+                };
+                buildRequests.push(buildRequest);
+
+                // Store in MongoDB for future use
+                await BuildRequest.findOneAndUpdate(
+                    { hash: buildRequest.hash },
+                    buildRequest,
+                    { upsert: true }
+                );
             } catch (e) {
-                console.error('Failed to parse cast:', cast, e);
+                console.error('Failed to parse cast:', e);
             }
         }
 
-        // Filter by time window if specified
-        if (timeWindow) {
-            const now = Date.now();
-            const timeWindowMs = {
-                day: 7 * 24 * 60 * 60 * 1000,     // 1 week for "day"
-                week: 30 * 24 * 60 * 60 * 1000,   // 1 month for "week"
-                month: 180 * 24 * 60 * 60 * 1000, // 6 months for "month"
-            }[timeWindow];
-
-            buildRequests = buildRequests.filter(
-                (req) => {
-                    const timestamp = new Date(req.timestamp).getTime();
-                    return now - timestamp <= timeWindowMs;
-                }
+        // Apply search filter if specified
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            buildRequests = buildRequests.filter(req => 
+                searchRegex.test(req.text) ||
+                searchRegex.test(req.author.username) ||
+                searchRegex.test(req.author.displayName)
             );
-
-            // Sort by engagement (likes + recasts) for time-windowed requests
-            buildRequests.sort((a, b) => {
-                const aScore = a.reactions.likes_count + a.reactions.recasts_count;
-                const bScore = b.reactions.likes_count + b.reactions.recasts_count;
-                return bScore - aScore;
-            });
-
-            // Limit results after filtering
-            buildRequests = buildRequests.slice(0, limit);
         }
+
+        // Apply sorting
+        if (sort === 'newest') {
+            buildRequests.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
+        } else {
+            buildRequests.sort((a, b) => {
+                const aScore = a.engagement.likes + a.engagement.recasts;
+                const bScore = b.engagement.likes + b.engagement.recasts;
+                return bScore - aScore || b.publishedAt.getTime() - a.publishedAt.getTime();
+            });
+        }
+
+        // Apply limit
+        buildRequests = buildRequests.slice(0, limit);
 
         return NextResponse.json({
             buildRequests,
-            next: data.next?.cursor,
+            next: response.next?.cursor,
         });
     } catch (error) {
         console.error('Error fetching build requests:', error);

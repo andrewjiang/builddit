@@ -1,13 +1,22 @@
 import { BuildRequest } from './types';
+import { SortOption } from '@/components/FilterBar';
 
 export async function fetchBuildRequests(
-    cursor?: string,
-    limit: number = 25
+    options: {
+        cursor?: string;
+        limit?: number;
+        sort?: SortOption;
+        search?: string;
+    } = {}
 ): Promise<{ buildRequests: BuildRequest[]; next?: string }> {
     try {
+        const { cursor, limit = 25, sort = 'top_day', search } = options;
         const params = new URLSearchParams();
+        
         if (cursor) params.set('cursor', cursor);
         if (limit) params.set('limit', limit.toString());
+        if (sort) params.set('sort', sort);
+        if (search) params.set('search', search);
 
         const response = await fetch(`/api/build-requests?${params.toString()}`);
         if (!response.ok) {

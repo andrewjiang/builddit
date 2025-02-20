@@ -38,11 +38,36 @@ Builddit provides a streamlined interface for browsing and interacting with buil
 - Frontend: Next.js with TypeScript
 - Backend: Node.js with TypeScript
 - Database: MongoDB
+  - Collections: BuildRequest, FarcasterUser, EngagementScore
 - Authentication: Farcaster Auth Kit
 - Hosting: Digital Ocean
 - Testing: Jest + React Testing Library
 
 ### Data Models
+
+#### FarcasterUser
+```typescript
+interface FarcasterUser {
+  fid: number;              // Farcaster ID
+  username: string;         // Farcaster username
+  displayName: string;      // Display name
+  pfp: {
+    url: string;           // Profile picture URL
+    verified: boolean;     // Profile picture verification status
+  };
+  profile: {
+    bio: {
+      text: string;
+      mentioned_profiles: string[];
+    };
+    location: string;
+  };
+  followerCount: number;
+  followingCount: number;
+  activeStatus: string;
+  lastUpdated: Date;
+}
+```
 
 #### Build Request
 ```typescript
@@ -179,6 +204,10 @@ interface Claim {
   - [x] Monitor rate limits
   - [x] Log sync statistics
   - [x] Set up error alerting
+- [x] Implement user data storage
+  - [x] Store Farcaster user profiles
+  - [x] Update user data during build request syncs
+  - [x] Track user engagement metrics
 - [ ] Create admin API endpoints for polling control
   - [ ] Start/stop polling
   - [ ] Adjust polling interval
@@ -187,7 +216,7 @@ interface Claim {
 
 ### Caching Improvements
 - [x] Implement in-memory caching with node-cache
-  - [x] Add cache manager singleton
+  - [x] Add cache service singleton
   - [x] Set up TTL for different data types
   - [x] Add cache invalidation
 - [ ] Add Redis for distributed caching
@@ -202,7 +231,7 @@ interface Claim {
 
 ### Database Optimization
 - [x] Set up MongoDB schemas and indexes
-  - [x] User model with FID indexing
+  - [x] FarcasterUser model with FID indexing
   - [x] BuildRequest model with compound indexes
   - [x] EngagementScore model for analytics
 - [ ] Add database connection pooling

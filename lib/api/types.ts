@@ -46,16 +46,21 @@ const ReactionsSchema = z.object({
     recasts: z.array(ReactionSchema),
 });
 
+// Create a more lenient user schema for nested casts
+const EmbeddedUserSchema = UserSchema.extend({
+    username: z.string().optional(), // Make username optional for nested casts
+});
+
 // Forward declaration to handle circular references
 const EmbeddedCastSchema: z.ZodType<any> = z.lazy(() => z.object({
-    object: z.string(),
-    hash: z.string(),
+    object: z.string().optional(),
+    hash: z.string().optional(),
     thread_hash: z.string().optional(),
     parent_hash: z.string().nullable().optional(),
     parent_url: z.string().nullable().optional(),
     root_parent_url: z.string().nullable().optional(),
     parent_author: z.object({ fid: z.number().nullable() }).optional(),
-    author: UserSchema.optional().nullable(),
+    author: EmbeddedUserSchema.optional().nullable(),
     text: z.string().optional(),
     timestamp: z.string().optional(),
     embeds: z.array(z.object({

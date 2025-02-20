@@ -19,7 +19,7 @@ export interface IEngagementScore extends Document {
 
 const EngagementScoreSchema = new Schema<IEngagementScore>(
   {
-    buildRequestHash: { type: String, required: true, ref: 'BuildRequest' },
+    buildRequestHash: { type: String, required: true },
     timeRange: {
       type: String,
       required: true,

@@ -1,11 +1,14 @@
 import NodeCache from 'node-cache';
-import { Cast } from '@/lib/api/types';
 import { IBuildRequest } from '@/lib/db/models/BuildRequest';
 import { TimeRange } from '@/lib/db/models/EngagementScore';
 
-class CacheManager {
-  private static instance: CacheManager;
+export class CacheService {
+  private static instance: CacheService;
   private cache: NodeCache;
+  private readonly CAST_PREFIX = 'cast';
+  private readonly FARCASTER_USER_PREFIX = 'farcaster_user';
+  private readonly ENGAGEMENT_PREFIX = 'engagement';
+  private readonly TTL = 5 * 60 * 1000; // 5 minutes
 
   // Cache keys
   private readonly LATEST_BUILDS_KEY = 'latest_builds';
@@ -20,11 +23,11 @@ class CacheManager {
     });
   }
 
-  public static getInstance(): CacheManager {
-    if (!CacheManager.instance) {
-      CacheManager.instance = new CacheManager();
+  public static getInstance(): CacheService {
+    if (!CacheService.instance) {
+      CacheService.instance = new CacheService();
     }
-    return CacheManager.instance;
+    return CacheService.instance;
   }
 
   // Latest build requests
@@ -77,21 +80,21 @@ class CacheManager {
     return this.cache.get<IBuildRequest>(this.getBuildRequestKey(hash));
   }
 
-  // User profiles
-  private getUserKey(fid: number): string {
-    return `${this.USER_PREFIX}_${fid}`;
+  // Farcaster user profiles
+  private getFarcasterUserKey(fid: number): string {
+    return `${this.FARCASTER_USER_PREFIX}_${fid}`;
   }
 
-  public setUser(fid: number, user: any) {
-    return this.cache.set(
-      this.getUserKey(fid),
+  public setFarcasterUser(fid: number, user: any) {
+    this.cache.set(
+      this.getFarcasterUserKey(fid),
       user,
-      60 * 60 // 1 hour TTL
+      this.TTL
     );
   }
 
-  public getUser(fid: number): any | undefined {
-    return this.cache.get(this.getUserKey(fid));
+  public getFarcasterUser(fid: number): any | undefined {
+    return this.cache.get(this.getFarcasterUserKey(fid));
   }
 
   // Cache management
@@ -108,4 +111,4 @@ class CacheManager {
   }
 }
 
-export const cacheManager = CacheManager.getInstance(); 
+export const cacheService = CacheService.getInstance(); 

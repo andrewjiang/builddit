@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { IUser } from './User';
+import { IFarcasterUser } from './User';
 
 export interface IBuildRequest extends Document {
   hash: string;
@@ -9,7 +9,7 @@ export interface IBuildRequest extends Document {
     fid: number;
     username: string;
     displayName: string;
-    pfpUrl: string;
+    pfpUrl?: string;
   };
   engagement: {
     likes: number;
@@ -20,7 +20,41 @@ export interface IBuildRequest extends Document {
   parentHash?: string;
   mentions: string[];
   embeds: Array<{
-    url: string;
+    url?: string;
+    cast_id?: {
+      fid: number;
+      hash: string;
+    };
+    cast?: {
+      author: {
+        fid: number;
+        username: string;
+        displayName?: string;
+        pfpUrl?: string;
+      };
+      text: string;
+      hash: string;
+      timestamp: string;
+      embeds?: Array<{
+        url?: string;
+        cast_id?: {
+          fid: number;
+          hash: string;
+        };
+        cast?: any;
+      }>;
+    };
+    metadata?: {
+      html?: {
+        ogTitle?: string;
+        ogDescription?: string;
+        ogImage?: Array<{
+          url: string;
+          width?: string;
+          height?: string;
+        }>;
+      };
+    };
     type: string;
   }>;
   lastUpdated: Date;
@@ -32,10 +66,10 @@ const BuildRequestSchema = new Schema<IBuildRequest>(
     text: { type: String, required: true },
     publishedAt: { type: Date, required: true },
     author: {
-      fid: { type: Number, required: true, ref: 'User' },
+      fid: { type: Number, required: true, ref: 'FarcasterUser' },
       username: { type: String, required: true },
       displayName: { type: String, required: true },
-      pfpUrl: { type: String, required: true },
+      pfpUrl: { type: String, required: false, default: '' },
     },
     engagement: {
       likes: { type: Number, default: 0 },
@@ -47,7 +81,41 @@ const BuildRequestSchema = new Schema<IBuildRequest>(
     mentions: [{ type: String }],
     embeds: [{
       url: { type: String },
-      type: { type: String },
+      cast_id: {
+        fid: { type: Number },
+        hash: { type: String }
+      },
+      cast: {
+        author: {
+          fid: { type: Number },
+          username: { type: String },
+          displayName: { type: String },
+          pfpUrl: { type: String }
+        },
+        text: { type: String },
+        hash: { type: String },
+        timestamp: { type: String },
+        embeds: [{
+          url: { type: String },
+          cast_id: {
+            fid: { type: Number },
+            hash: { type: String }
+          },
+          cast: { type: Schema.Types.Mixed }
+        }]
+      },
+      metadata: {
+        html: {
+          ogTitle: { type: String },
+          ogDescription: { type: String },
+          ogImage: [{
+            url: { type: String },
+            width: { type: String },
+            height: { type: String }
+          }]
+        }
+      },
+      type: { type: String }
     }],
     lastUpdated: { type: Date, default: Date.now },
   },
@@ -57,7 +125,6 @@ const BuildRequestSchema = new Schema<IBuildRequest>(
 );
 
 // Indexes for efficient querying
-BuildRequestSchema.index({ hash: 1 });
 BuildRequestSchema.index({ 'author.fid': 1 });
 BuildRequestSchema.index({ publishedAt: -1 });
 BuildRequestSchema.index({ lastUpdated: -1 });
