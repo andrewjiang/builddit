@@ -9,6 +9,17 @@ const config: Config = {
     "./node_modules/@farcaster/auth-kit/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    container: {
+      center: true,
+      padding: "1rem",
+      screens: {
+        "2xl": "1024px",
+        xl: "1024px",
+        lg: "1024px",
+        md: "768px",
+        sm: "640px",
+      },
+    },
     extend: {
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
