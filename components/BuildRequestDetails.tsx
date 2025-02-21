@@ -8,6 +8,7 @@ import Link from "next/link";
 import { SafeImage } from "./SafeImage";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { AuthModal } from "./AuthModal";
+import { useSession } from "next-auth/react";
 
 interface BuildRequestDetailsProps {
   buildRequest: BuildRequest;
@@ -29,7 +30,7 @@ function EmbeddedCastCard({
         href={`https://warpcast.com/${cast.author?.username || "unknown"}/${cast.hash}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-purple-300 hover:text-purple-200 text-sm"
+        className="text-purple-300 hover:text-purple-200 text-sm break-all"
       >
         View nested cast on Warpcast
       </Link>
@@ -57,7 +58,7 @@ function EmbeddedCastCard({
           )}
         </div>
       </div>
-      <p className="text-purple-100 whitespace-pre-wrap mb-3">{cast.text}</p>
+      <p className="text-purple-100 whitespace-pre-wrap break-words overflow-hidden overflow-wrap-anywhere mb-3">{cast.text}</p>
       {cast.embeds && cast.embeds.length > 0 && (
         <div className="space-y-2">
           {cast.embeds.map((embed: Embed, index: number) => (
@@ -72,15 +73,18 @@ function EmbeddedCastCard({
                   className="block bg-purple-900/50 rounded p-3 hover:bg-purple-900/70 transition-colors"
                 >
                   {embed.metadata?.html?.ogTitle && (
-                    <h4 className="font-medium text-purple-100">
+                    <h4 className="font-medium text-purple-100 break-words">
                       {embed.metadata.html.ogTitle}
                     </h4>
                   )}
                   {embed.metadata?.html?.ogDescription && (
-                    <p className="text-purple-300 text-sm mt-1">
+                    <p className="text-purple-300 text-sm mt-1 break-words">
                       {embed.metadata.html.ogDescription}
                     </p>
                   )}
+                  <span className="text-purple-400 hover:text-purple-300 text-sm mt-1.5 block break-all">
+                    {embed.url}
+                  </span>
                 </a>
               ) : null}
             </div>
@@ -121,6 +125,15 @@ export function BuildRequestDetails({
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const { data: session } = useSession();
+
+  const handleBuildClick = () => {
+    if (!session?.user) {
+      setIsAuthModalOpen(true);
+    } else {
+      setIsClaimModalOpen(true);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-900 via-purple-800 to-purple-700 relative">
@@ -169,7 +182,7 @@ export function BuildRequestDetails({
             </div>
           </div>
 
-          <p className="text-lg mb-4 text-purple-100 whitespace-pre-wrap">
+          <p className="text-lg mb-4 text-purple-100 whitespace-pre-wrap break-words overflow-hidden overflow-wrap-anywhere">
             {buildRequest.text}
           </p>
 
@@ -231,11 +244,7 @@ export function BuildRequestDetails({
           )}
 
           <button
-            onClick={() =>
-              isAuthenticated
-                ? setIsClaimModalOpen(true)
-                : setIsAuthModalOpen(true)
-            }
+            onClick={handleBuildClick}
             className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
                                  bg-gradient-to-r from-emerald-400 to-emerald-300 p-[2px] font-medium text-emerald-900 
                                  shadow-xl shadow-emerald-400/20 transition-all duration-300 hover:shadow-emerald-400/40
@@ -280,11 +289,7 @@ export function BuildRequestDetails({
                 to shine! Why not be the first to build it?
               </p>
               <button
-                onClick={() =>
-                  isAuthenticated
-                    ? setIsClaimModalOpen(true)
-                    : setIsAuthModalOpen(true)
-                }
+                onClick={handleBuildClick}
                 className="mt-6 group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
                                          bg-gradient-to-r from-emerald-400 to-emerald-300 p-[2px] font-medium text-emerald-900 
                                          shadow-xl shadow-emerald-400/20 transition-all duration-300 hover:shadow-emerald-400/40
@@ -320,7 +325,7 @@ export function BuildRequestDetails({
                     <p className="text-purple-300">@{claim.author.username}</p>
                   </div>
                 </div>
-                <p className="text-purple-100 whitespace-pre-wrap">
+                <p className="text-purple-100 whitespace-pre-wrap break-words overflow-hidden overflow-wrap-anywhere">
                   {claim.text}
                 </p>
               </div>
@@ -331,12 +336,28 @@ export function BuildRequestDetails({
         <AuthModal
           isOpen={isAuthModalOpen}
           onClose={() => setIsAuthModalOpen(false)}
-          message="Please sign in with Farcaster to claim this build"
+          message="Sign in with Farcaster to submit your build"
         />
         <ClaimBuildModal
           isOpen={isClaimModalOpen}
           onClose={() => setIsClaimModalOpen(false)}
-          buildRequest={buildRequest}
+          buildRequest={{
+            object: "cast",
+            hash: buildRequest.hash,
+            thread_hash: buildRequest.hash,
+            parent_hash: null,
+            parent_url: null,
+            root_parent_url: null,
+            parent_author: { fid: null },
+            text: buildRequest.text,
+            timestamp: buildRequest.timestamp,
+            embeds: buildRequest.embeds,
+            reactions: buildRequest.reactions,
+            replies: buildRequest.replies,
+            mentioned_profiles: buildRequest.mentioned_profiles,
+            author: buildRequest.author,
+            channel: buildRequest.channel
+          }}
         />
       </div>
     </div>

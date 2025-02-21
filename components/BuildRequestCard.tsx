@@ -195,12 +195,13 @@ export function BuildRequestCard({ buildRequest }: BuildRequestCardProps) {
     window.open(intentUrl.toString(), "_blank");
   };
 
-  const handleBuildClick = () => {
+  const handleBuildClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!session?.user) {
       setIsAuthModalOpen(true);
-      return;
+    } else {
+      setIsClaimModalOpen(true);
     }
-    setIsClaimModalOpen(true);
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -463,12 +464,9 @@ export function BuildRequestCard({ buildRequest }: BuildRequestCardProps) {
             </div>
           </div>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleBuildClick();
-            }}
+            onClick={handleBuildClick}
             className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
-                               bg-gradient-to-r from-emerald-400 to-emerald-300 p-[1.5px] font-medium text-emerald-900 
+                               bg-gradient-to-r from-emerald-400 to-emerald-300 p-[2px] font-medium text-emerald-900 
                                shadow-xl shadow-emerald-400/20 transition-all duration-300 hover:shadow-emerald-400/40
                                hover:scale-[1.02] active:scale-[0.98]"
             data-oid="bxp4bi4"

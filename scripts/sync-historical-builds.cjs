@@ -227,6 +227,7 @@ async function syncCasts(cursor, limit = 50) {
     sampleCast: response.casts[0]
       ? {
           hash: response.casts[0].hash,
+          timestamp: response.casts[0].timestamp,
           text: response.casts[0].text?.slice(0, 50) + "...",
           author: response.casts[0].author,
           repliesCount: response.casts[0].replies?.count,
@@ -246,6 +247,7 @@ async function syncCasts(cursor, limit = 50) {
       console.log("\n--- Processing Cast ---");
       console.log("Cast:", {
         hash: cast.hash,
+        timestamp: cast.timestamp,
         author: cast.author,
         repliesCount: cast.replies?.count,
         repliesAvailable: cast.replies?.result?.length || 0,

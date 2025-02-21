@@ -438,3 +438,100 @@ The project uses a combination of Farcaster Auth Kit and Next-Auth to provide a 
    - `components/Providers.tsx`: Auth providers setup
    - `components/AuthButton.tsx`: Authentication UI and state management
    - `types/next-auth.d.ts`: TypeScript definitions for auth types
+
+## Data Synchronization Architecture
+
+The application uses a hybrid data fetching approach to balance performance and data freshness:
+
+### Frontend Polling
+- The frontend polls every 30 seconds for new content
+- Each poll first attempts to fetch from MongoDB for performance
+- Falls back to Neynar API if MongoDB query fails or returns no results
+- New posts are merged at the top during polling
+- Additional posts are appended at the bottom during infinite scroll
+
+### Database Updates
+1. **Primary Path (MongoDB)**
+   - Most reads hit MongoDB first for better performance
+   - Stores complete build request data including:
+     - Cast metadata (text, timestamp, author)
+     - Engagement metrics (likes, recasts, replies)
+     - Embedded content and metadata
+     - Claims and build status
+
+2. **Fallback Path (Neynar API)**
+   - Used when MongoDB fails or returns no results
+   - Automatically updates MongoDB with new data
+   - Updates both user information and build requests
+   - Uses upsert operations to ensure data consistency
+
+### Historical Sync
+A separate script (`scripts/sync-historical-builds.cjs`) handles complete historical data synchronization:
+- Processes builds in batches (100 per batch)
+- Includes full engagement metrics
+- Syncs all replies and recasts
+- Updates claim counts
+- Maintains user profiles
+
+### Known Limitations
+- Frontend polling might miss updates if MongoDB always returns results
+- Engagement metrics might be stale between polls
+- No real-time updates for likes/recasts
+
+### Future Improvements
+- [ ] Add timestamp checks to force Neynar refresh for stale data
+- [ ] Implement background job for periodic Neynar sync
+- [ ] Add Neynar webhook support for real-time updates
+- [ ] Add Redis caching layer for high-traffic queries
+
+### Cron Jobs Setup (Digital Ocean)
+
+For reliable execution of background tasks and data synchronization, we use Digital Ocean App Platform Jobs:
+
+1. **Historical Build Sync Job**
+   ```yaml
+   jobs:
+   - name: sync-historical-builds
+     git:
+       repo_clone_url: https://github.com/andrewjiang/builddit.git
+       branch: main
+     run_command: node scripts/sync-historical-builds.cjs
+     environment_slug: node-js
+     schedule: */30 * * * *  # Runs every 30 minutes
+     environment:
+       - key: MONGODB_URI
+         scope: RUN_TIME
+         value: ${MONGODB_URI}
+       - key: NEYNAR_API_KEY
+         scope: RUN_TIME
+         value: ${NEYNAR_API_KEY}
+       - key: NEYNAR_CHANNEL_ID
+         scope: RUN_TIME
+         value: ${NEYNAR_CHANNEL_ID}
+   ```
+
+2. **Engagement Metrics Sync**
+   ```yaml
+   jobs:
+   - name: sync-engagement
+     git:
+       repo_clone_url: https://github.com/andrewjiang/builddit.git
+       branch: main
+     run_command: node scripts/sync-engagement.cjs
+     environment_slug: node-js
+     schedule: */5 * * * *  # Runs every 5 minutes
+   ```
+
+#### Benefits of Digital Ocean Jobs:
+- No execution time limits
+- Reliable scheduling
+- Detailed logging and monitoring
+- Auto-retry on failure
+- Resource isolation
+- Cost-effective for background tasks
+
+#### Setup Instructions:
+1. Create a new App Platform project
+2. Add the jobs section to your `app.yaml`
+3. Configure environment variables
+4. Deploy and monitor through Digital Ocean dashboard

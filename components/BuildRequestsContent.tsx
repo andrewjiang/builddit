@@ -132,6 +132,10 @@ export function BuildRequestsContent({
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    // If searching and current sort is a "top" sort, switch to "top_all"
+    if (query && currentSort.startsWith('top_')) {
+      setCurrentSort('top_all');
+    }
   };
 
   // Infinite scroll handler
