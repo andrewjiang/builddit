@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import { SafeImage } from "./SafeImage";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { BountyModal } from "./BountyModal";
 
 interface BuildRequestCardProps {
   buildRequest: BuildRequest;
@@ -146,6 +147,7 @@ export function BuildRequestCard({ buildRequest }: BuildRequestCardProps) {
   const { data: session } = useSession();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [isBountyModalOpen, setIsBountyModalOpen] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
   const { isAuthenticated } = useAuth();
   const router = useRouter();
@@ -355,11 +357,82 @@ export function BuildRequestCard({ buildRequest }: BuildRequestCardProps) {
       </div>
 
       <div
-        className="flex items-center justify-between mt-4"
+        className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:items-center md:justify-between mt-4"
         data-oid="s3j_83f"
       >
+        {/* Buttons - Full width on mobile, normal on desktop */}
+        <div className="flex items-center space-x-2 w-full md:w-auto order-1 md:order-2">
+          <button
+            onClick={handleBuildClick}
+            className="flex-1 md:flex-none group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
+                               bg-gradient-to-r from-emerald-400 to-emerald-300 p-[2px] font-medium text-emerald-900 
+                               shadow-xl shadow-emerald-400/20 transition-all duration-300 hover:shadow-emerald-400/40
+                               hover:scale-[1.02] active:scale-[0.98]"
+            data-oid="bxp4bi4"
+          >
+            <span
+              className="relative flex items-center space-x-1.5 rounded-lg bg-gradient-to-r from-emerald-400 
+                                     to-emerald-300 px-2 py-1.5 text-sm transition-all duration-200 ease-out group-hover:bg-opacity-0 
+                                     group-hover:from-emerald-300 group-hover:to-emerald-200 w-full justify-center md:justify-start md:w-auto"
+              data-oid="4ox26cb"
+            >
+              <svg
+                className="w-3.5 h-3.5 transform transition-transform duration-200 group-hover:translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                data-oid="_l3tg5k"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  data-oid="hb-0pvl"
+                />
+              </svg>
+              <span className="font-medium" data-oid="qktudy9">
+                I Built This!
+              </span>
+            </span>
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsBountyModalOpen(true);
+            }}
+            className="flex-1 md:flex-none group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
+                               bg-gradient-to-r from-yellow-400 to-yellow-300 p-[2px] font-medium text-purple-900 
+                               shadow-xl shadow-yellow-400/20 transition-all duration-300 hover:shadow-yellow-400/40
+                               hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <span
+              className="relative flex items-center space-x-1.5 rounded-lg bg-gradient-to-r from-yellow-400 
+                                     to-yellow-300 px-2 py-1.5 text-sm transition-all duration-200 ease-out group-hover:bg-opacity-0 
+                                     group-hover:from-yellow-300 group-hover:to-yellow-200 w-full justify-center md:justify-start md:w-auto"
+            >
+              <svg
+                className="w-3.5 h-3.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="font-medium">Post Bounty</span>
+            </span>
+          </button>
+        </div>
+
+        {/* Date and Engagement - Full width on mobile, normal on desktop */}
         <div
-          className="flex items-center space-x-3 text-sm text-purple-300"
+          className="flex items-center space-x-3 text-sm text-purple-300 order-2 md:order-1"
           data-oid="h-_0k9j"
         >
           <time
@@ -369,7 +442,7 @@ export function BuildRequestCard({ buildRequest }: BuildRequestCardProps) {
           >
             {formattedDate}
           </time>
-          <span className="hidden md:inline text-purple-600" data-oid="qmdtok:">
+          <span className="text-purple-600" data-oid="qmdtok:">
             •
           </span>
           <div className="flex items-center space-x-3" data-oid="0q200ip">
@@ -433,43 +506,6 @@ export function BuildRequestCard({ buildRequest }: BuildRequestCardProps) {
             </button>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-
-          <button
-            onClick={handleBuildClick}
-            className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
-                               bg-gradient-to-r from-emerald-400 to-emerald-300 p-[2px] font-medium text-emerald-900 
-                               shadow-xl shadow-emerald-400/20 transition-all duration-300 hover:shadow-emerald-400/40
-                               hover:scale-[1.02] active:scale-[0.98]"
-            data-oid="bxp4bi4"
-          >
-            <span
-              className="relative flex items-center space-x-1.5 rounded-lg bg-gradient-to-r from-emerald-400 
-                                     to-emerald-300 px-2 py-1.5 text-sm transition-all duration-200 ease-out group-hover:bg-opacity-0 
-                                     group-hover:from-emerald-300 group-hover:to-emerald-200"
-              data-oid="4ox26cb"
-            >
-              <svg
-                className="w-3.5 h-3.5 transform transition-transform duration-200 group-hover:translate-x-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                data-oid="_l3tg5k"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  data-oid="hb-0pvl"
-                />
-              </svg>
-              <span className="font-medium" data-oid="qktudy9">
-                I Built This!
-              </span>
-            </span>
-          </button>
-        </div>
       </div>
 
       {/* Auth Modal */}
@@ -489,6 +525,15 @@ export function BuildRequestCard({ buildRequest }: BuildRequestCardProps) {
           isOpen={isClaimModalOpen}
           onClose={() => setIsClaimModalOpen(false)}
           data-oid="-je2bnc"
+        />
+      </div>
+
+      {/* Bounty Modal */}
+      <div className="relative z-50">
+        <BountyModal
+          buildRequest={buildRequest}
+          isOpen={isBountyModalOpen}
+          onClose={() => setIsBountyModalOpen(false)}
         />
       </div>
     </div>

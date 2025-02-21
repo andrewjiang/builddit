@@ -9,6 +9,7 @@ import { SafeImage } from "./SafeImage";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { AuthModal } from "./AuthModal";
 import { useSession } from "next-auth/react";
+import { BountyModal } from "./BountyModal";
 
 interface BuildRequestDetailsProps {
   buildRequest: BuildRequest;
@@ -124,6 +125,7 @@ export function BuildRequestDetails({
 }: BuildRequestDetailsProps) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [isBountyModalOpen, setIsBountyModalOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const { data: session } = useSession();
@@ -250,21 +252,52 @@ export function BuildRequestDetails({
             </div>
           )}
 
-          <button
-            onClick={handleBuildClick}
-            className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleBuildClick}
+              className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
                                  bg-gradient-to-r from-emerald-400 to-emerald-300 p-[2px] font-medium text-emerald-900 
                                  shadow-xl shadow-emerald-400/20 transition-all duration-300 hover:shadow-emerald-400/40
                                  hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <span
-              className="relative flex items-center space-x-2 rounded-lg bg-gradient-to-r from-emerald-400 
+            >
+              <span
+                className="relative flex items-center space-x-2 rounded-lg bg-gradient-to-r from-emerald-400 
                                        to-emerald-300 px-6 py-2.5 transition-all duration-200 ease-out group-hover:bg-opacity-0 
                                        group-hover:from-emerald-300 group-hover:to-emerald-200"
+              >
+                <span className="font-medium">I Built This!</span>
+              </span>
+            </button>
+
+            <button
+              onClick={() => setIsBountyModalOpen(true)}
+              className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
+                                 bg-gradient-to-r from-yellow-400 to-yellow-300 p-[2px] font-medium text-purple-900 
+                                 shadow-xl shadow-yellow-400/20 transition-all duration-300 hover:shadow-yellow-400/40
+                                 hover:scale-[1.02] active:scale-[0.98]"
             >
-              <span className="font-medium">I Built This!</span>
-            </span>
-          </button>
+              <span
+                className="relative flex items-center space-x-2 rounded-lg bg-gradient-to-r from-yellow-400 
+                                       to-yellow-300 px-6 py-2.5 transition-all duration-200 ease-out group-hover:bg-opacity-0 
+                                       group-hover:from-yellow-300 group-hover:to-yellow-200"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="font-medium">Post Bounty</span>
+              </span>
+            </button>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -364,6 +397,11 @@ export function BuildRequestDetails({
           isOpen={isClaimModalOpen}
           onClose={() => setIsClaimModalOpen(false)}
           onClaimSubmitted={handleClaimSubmitted}
+        />
+        <BountyModal
+          buildRequest={buildRequest}
+          isOpen={isBountyModalOpen}
+          onClose={() => setIsBountyModalOpen(false)}
         />
       </div>
     </div>
