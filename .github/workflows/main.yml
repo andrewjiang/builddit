@@ -1,4 +1,4 @@
-name: CI/CD
+name: CI
 
 on:
   push:
@@ -61,19 +61,3 @@ jobs:
           NEXT_PUBLIC_RPC_URL: ${{ secrets.NEXT_PUBLIC_RPC_URL }}
           NEXT_PUBLIC_DOMAIN: ${{ secrets.NEXT_PUBLIC_DOMAIN }}
           NEXT_PUBLIC_SIWE_URI: ${{ secrets.NEXT_PUBLIC_SIWE_URI }}
-
-  deploy:
-    needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install doctl
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-
-      - name: Deploy to Digital Ocean
-        run: |
-          doctl apps create-deployment ${{ secrets.DIGITALOCEAN_APP_ID }}

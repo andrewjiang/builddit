@@ -81,9 +81,19 @@ Builddit provides a streamlined interface for browsing and interacting with buil
 
 The project is deployed on Vercel. To deploy your own instance:
 
-1. Push your code to GitHub
+1. Fork the repository
 2. Import the repository in Vercel
-3. Configure environment variables in Vercel dashboard
+3. Configure environment variables in Vercel dashboard:
+   - `MONGODB_URI`
+   - `NEYNAR_API_KEY`
+   - `NEYNAR_CLIENT_ID`
+   - `NEYNAR_CHANNEL_ID`
+   - `NEXTAUTH_URL`
+   - `NEXTAUTH_SECRET`
+   - `NEXT_PUBLIC_RELAY_URL`
+   - `NEXT_PUBLIC_RPC_URL`
+   - `NEXT_PUBLIC_DOMAIN`
+   - `NEXT_PUBLIC_SIWE_URI`
 4. Deploy!
 
 ## Contributing
@@ -113,7 +123,6 @@ MIT License
 - Database: MongoDB
   - Collections: BuildRequest, FarcasterUser, EngagementScore
 - Authentication: Farcaster Auth Kit
-- Hosting: Digital Ocean
 - Testing: Jest + React Testing Library
 
 ### Data Models
@@ -204,131 +213,50 @@ interface Claim {
 }
 ```
 
-### API Endpoints
+### Data Synchronization Architecture
 
-#### Public Endpoints
+The application uses a hybrid data fetching approach to balance performance and data freshness:
 
-- `GET /api/builds` - List build requests
-  - Query params: sort (newest/top), page, limit
-- `GET /api/builds/:id` - Get specific build request
-- `GET /api/builds/:id/claims` - List claims for a build
+#### Frontend Polling
 
-#### Authenticated Endpoints
+- The frontend polls every 30 seconds for new content
+- Each poll first attempts to fetch from MongoDB for performance
+- Falls back to Neynar API if MongoDB query fails or returns no results
+- New posts are merged at the top during polling
+- Additional posts are appended at the bottom during infinite scroll
 
-- `POST /api/builds/:id/claims` - Submit a new claim
-- `GET /api/user/profile` - Get authenticated user profile
+#### Database Updates
 
-## Development Setup
+1. **Primary Path (MongoDB)**
+   - Most reads hit MongoDB first for better performance
+   - Stores complete build request data including:
+     - Cast metadata (text, timestamp, author)
+     - Engagement metrics (likes, recasts, replies)
+     - Embedded content and metadata
+     - Claims and build status
 
-[To be added: Setup instructions]
+2. **Fallback Path (Neynar API)**
+   - Used when MongoDB fails or returns no results
+   - Automatically updates MongoDB with new data
+   - Updates both user information and build requests
+   - Uses upsert operations to ensure data consistency
 
-## Testing Strategy
+### Known Limitations
 
-### Unit Tests
+- Frontend polling might miss updates if MongoDB always returns results
+- Engagement metrics might be stale between polls
+- No real-time updates for likes/recasts
 
-- Components: React Testing Library
-- API Routes: Jest
-- Data Models: Jest
-- Utility Functions: Jest
+### Future Improvements
 
-### Integration Tests
-
-- API Integration
-- Authentication Flow
-- Build Claim Flow
-
-### Mocking Strategy
-
-- Farcaster API responses
-- Authentication states
-- Database operations
-
-## Deployment
-
-### Digital Ocean Setup
-
-1. Create a new app on Digital Ocean App Platform
-2. Configure environment variables:
-   - `MONGODB_URI`
-   - `NEYNAR_API_KEY`
-   - `NEYNAR_CLIENT_ID`
-   - `NEYNAR_CHANNEL_ID`
-   - `NEXTAUTH_URL`
-   - `NEXTAUTH_SECRET`
-   - `NEXT_PUBLIC_RELAY_URL`
-   - `NEXT_PUBLIC_RPC_URL`
-   - `NEXT_PUBLIC_DOMAIN`
-   - `NEXT_PUBLIC_SIWE_URI`
-
-### Domain Configuration
-
-1. Register domain (if not already owned)
-2. Configure DNS settings in Digital Ocean
-3. Setup SSL certificate
-4. Configure domain in app settings
-
-### CI/CD Pipeline
-
-1. Github Actions workflow:
-   ```yaml
-   - Build and test
-   - Lint check
-   - Type check
-   - Deploy to staging
-   - Deploy to production
-   ```
-2. Environment specific configurations
-3. Automated deployment on main branch
-4. Manual approval for production deployments
-
-### Monitoring
-
-1. Setup application monitoring
-2. Configure error tracking
-3. Setup performance monitoring
-4. Configure alerts
-
-## Current Sprint
-
-- [ ] Setup Digital Ocean deployment
-- [ ] Configure domain and SSL
-- [ ] Implement CI/CD pipeline
-- [ ] Add monitoring and alerts
-- [ ] Enhance sorting transitions
-- [ ] Fix sign-out flow
-- [ ] Add admin controls for polling
-
-## Contributing
-
-[To be added: Contribution guidelines]
-
-## Progress Tracking
-
-### Current Sprint
-
-- [ ] Setup Digital Ocean deployment
-- [ ] Configure domain and SSL
-- [ ] Implement CI/CD pipeline
-- [ ] Add monitoring and alerts
-- [ ] Enhance sorting transitions
-- [ ] Fix sign-out flow
-- [ ] Add admin controls for polling
-
-### Completed
-
-- [x] Initial project planning
-- [x] Technical specification
-- [x] Authentication flow
-- [x] Data fetching and caching
-- [x] Real-time polling
-- [x] Error handling and validation
-- [x] Authentication persistence
-- [x] Loading states
-- [x] Responsive design
-- [x] FID handling
+- [ ] Add timestamp checks to force Neynar refresh for stale data
+- [ ] Implement background job for periodic Neynar sync
+- [ ] Add Neynar webhook support for real-time updates
+- [ ] Add Redis caching layer for high-traffic queries
 
 ## Recent Updates
 
+- Added bounty posting feature
 - Fixed authentication persistence
 - Added loading states and animations
 - Improved error handling and recovery
@@ -349,203 +277,9 @@ interface Claim {
 
 ## Upcoming Tasks
 
-### Data Synchronization & Polling
-
-- [x] Fix Neynar API client method names to match SDK v2.13.1
-  - [x] Add type definitions for Neynar SDK methods
-  - [x] Implement rate limiting and error handling
-  - [x] Add data transformation layer
-- [x] Set up automatic polling service startup with app
-  - [x] Create app initialization hook
-  - [x] Add graceful shutdown handling
-  - [x] Implement health checks
-- [x] Add monitoring and logging for polling service
-  - [x] Track successful/failed API calls
-  - [x] Monitor rate limits
-  - [x] Log sync statistics
-  - [x] Set up error alerting
-- [ ] Create admin API endpoints for polling control
-  - [ ] Start/stop polling
-  - [ ] Adjust polling interval
-  - [ ] Force immediate sync
-  - [ ] View sync status and metrics
-
-### Caching Improvements
-
-- [x] Implement in-memory caching with node-cache
-  - [x] Add cache service singleton
-  - [x] Set up TTL for different data types
-  - [x] Add cache invalidation
-- [ ] Add Redis for distributed caching
-  - [ ] Set up Redis connection
-  - [ ] Migrate from node-cache
-  - [ ] Add cache replication
-- [ ] Add cache warming on app startup
-- [ ] Implement advanced cache strategies
-  - [ ] Stale-while-revalidate
-  - [ ] Cache prefetching
-  - [ ] Cache versioning
-
-### Database Optimization
-
-- [x] Set up MongoDB schemas and indexes
-  - [x] FarcasterUser model with FID indexing
-  - [x] BuildRequest model with compound indexes
-  - [x] EngagementScore model for analytics
-- [ ] Add database connection pooling
-- [ ] Implement query optimization
-  - [ ] Add query analysis
-  - [ ] Optimize index usage
-  - [ ] Implement data aggregation
-- [ ] Set up database monitoring
-  - [ ] Monitor query performance
-  - [ ] Track connection pool usage
-  - [ ] Set up slow query logging
-
-### Monitoring & Logging
-
-- [ ] Set up structured logging
-  - [ ] Add request/response logging
-  - [ ] Implement error tracking
-  - [ ] Add performance metrics
-- [ ] Create monitoring dashboard
-  - [ ] API endpoint metrics
-  - [ ] Cache performance
-  - [ ] Database metrics
-  - [ ] System health
-
-### Authentication Implementation Details
-
-The project uses a combination of Farcaster Auth Kit and Next-Auth to provide a seamless authentication experience:
-
-1. **Farcaster Auth Kit**: Handles the initial Farcaster authentication flow
-
-   - User signs in with their Farcaster account
-   - Provides access to Farcaster-specific user data
-   - Manages the connection to Farcaster's authentication system
-
-2. **Next-Auth Integration**: Manages session persistence
-
-   - JWT-based session storage
-   - 7-day session duration
-   - Secure credential handling
-   - Automatic token refresh
-
-3. **State Synchronization**:
-
-   - Farcaster Auth Kit state is synchronized with Next-Auth
-   - User data is stored in both systems
-   - Seamless state recovery on page refresh
-
-4. **Implementation Files**:
-   - `app/api/auth/[...nextauth]/route.ts`: Next-Auth configuration and API routes
-   - `components/Providers.tsx`: Auth providers setup
-   - `components/AuthButton.tsx`: Authentication UI and state management
-   - `types/next-auth.d.ts`: TypeScript definitions for auth types
-
-## Data Synchronization Architecture
-
-The application uses a hybrid data fetching approach to balance performance and data freshness:
-
-### Frontend Polling
-
-- The frontend polls every 30 seconds for new content
-- Each poll first attempts to fetch from MongoDB for performance
-- Falls back to Neynar API if MongoDB query fails or returns no results
-- New posts are merged at the top during polling
-- Additional posts are appended at the bottom during infinite scroll
-
-### Database Updates
-
-1. **Primary Path (MongoDB)**
-
-   - Most reads hit MongoDB first for better performance
-   - Stores complete build request data including:
-     - Cast metadata (text, timestamp, author)
-     - Engagement metrics (likes, recasts, replies)
-     - Embedded content and metadata
-     - Claims and build status
-
-2. **Fallback Path (Neynar API)**
-   - Used when MongoDB fails or returns no results
-   - Automatically updates MongoDB with new data
-   - Updates both user information and build requests
-   - Uses upsert operations to ensure data consistency
-
-### Historical Sync
-
-A separate script (`scripts/sync-historical-builds.cjs`) handles complete historical data synchronization:
-
-- Processes builds in batches (100 per batch)
-- Includes full engagement metrics
-- Syncs all replies and recasts
-- Updates claim counts
-- Maintains user profiles
-
-### Known Limitations
-
-- Frontend polling might miss updates if MongoDB always returns results
-- Engagement metrics might be stale between polls
-- No real-time updates for likes/recasts
-
-### Future Improvements
-
 - [ ] Add timestamp checks to force Neynar refresh for stale data
 - [ ] Implement background job for periodic Neynar sync
 - [ ] Add Neynar webhook support for real-time updates
 - [ ] Add Redis caching layer for high-traffic queries
-
-### Cron Jobs Setup (Digital Ocean)
-
-For reliable execution of background tasks and data synchronization, we use Digital Ocean App Platform Jobs:
-
-1. **Historical Build Sync Job**
-
-   ```yaml
-   jobs:
-   - name: sync-historical-builds
-     git:
-       repo_clone_url: https://github.com/andrewjiang/builddit.git
-       branch: main
-     run_command: node scripts/sync-historical-builds.cjs
-     environment_slug: node-js
-     schedule: */30 * * * *  # Runs every 30 minutes
-     environment:
-       - key: MONGODB_URI
-         scope: RUN_TIME
-         value: ${MONGODB_URI}
-       - key: NEYNAR_API_KEY
-         scope: RUN_TIME
-         value: ${NEYNAR_API_KEY}
-       - key: NEYNAR_CHANNEL_ID
-         scope: RUN_TIME
-         value: ${NEYNAR_CHANNEL_ID}
-   ```
-
-2. **Engagement Metrics Sync**
-   ```yaml
-   jobs:
-   - name: sync-engagement
-     git:
-       repo_clone_url: https://github.com/andrewjiang/builddit.git
-       branch: main
-     run_command: node scripts/sync-engagement.cjs
-     environment_slug: node-js
-     schedule: */5 * * * *  # Runs every 5 minutes
-   ```
-
-#### Benefits of Digital Ocean Jobs:
-
-- No execution time limits
-- Reliable scheduling
-- Detailed logging and monitoring
-- Auto-retry on failure
-- Resource isolation
-- Cost-effective for background tasks
-
-#### Setup Instructions:
-
-1. Create a new App Platform project
-2. Add the jobs section to your `app.yaml`
-3. Configure environment variables
-4. Deploy and monitor through Digital Ocean dashboard
+- [ ] Fix sign-out flow
+- [ ] Enhance sorting transitions
