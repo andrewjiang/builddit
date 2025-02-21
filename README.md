@@ -228,6 +228,7 @@ The application uses a hybrid data fetching approach to balance performance and 
 #### Database Updates
 
 1. **Primary Path (MongoDB)**
+
    - Most reads hit MongoDB first for better performance
    - Stores complete build request data including:
      - Cast metadata (text, timestamp, author)
