@@ -40,7 +40,7 @@ class NeynarClient {
 
   private initialize() {
     if (this.client) return;
-    
+
     const apiKey = process.env.NEYNAR_API_KEY;
     if (!apiKey) {
       throw new Error("NEYNAR_API_KEY environment variable is not set");
@@ -49,7 +49,7 @@ class NeynarClient {
     if (!channelId) {
       throw new Error("NEYNAR_CHANNEL_ID environment variable is not set");
     }
-    
+
     this.apiKey = apiKey;
     this.channelId = channelId;
     this.client = new BaseNeynarAPIClient({ apiKey });
@@ -65,7 +65,7 @@ class NeynarClient {
   private async rateLimitedRequest<T>(request: () => Promise<T>): Promise<T> {
     this.initialize();
     if (!this.client) throw new Error("Client not initialized");
-    
+
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequestTime;
 
@@ -81,8 +81,9 @@ class NeynarClient {
 
   async fetchBuildRequests(cursor?: string, limit: number = 50) {
     return this.rateLimitedRequest(async () => {
-      if (!this.client || !this.channelId) throw new Error("Client not initialized");
-      
+      if (!this.client || !this.channelId)
+        throw new Error("Client not initialized");
+
       const response = await this.client.fetchFeedByChannelIds({
         channelIds: [this.channelId],
         withRecasts: true,
@@ -102,7 +103,7 @@ class NeynarClient {
   public async fetchUserProfile(fid: number) {
     return this.rateLimitedRequest(async () => {
       if (!this.client) throw new Error("Client not initialized");
-      
+
       try {
         const response = await this.client.fetchBulkUsers({
           fids: [fid],
@@ -118,7 +119,7 @@ class NeynarClient {
   public async fetchCastEngagement(hash: string) {
     return this.rateLimitedRequest(async () => {
       if (!this.client) throw new Error("Client not initialized");
-      
+
       try {
         const [likesResponse, recastsResponse, castResponse] =
           await Promise.all([
@@ -156,7 +157,7 @@ class NeynarClient {
   async fetchReplies(castHash: string): Promise<any[]> {
     return this.rateLimitedRequest(async () => {
       if (!this.apiKey) throw new Error("Client not initialized");
-      
+
       try {
         const response = await fetch(
           `https://api.neynar.com/v2/farcaster/cast/conversation?identifier=${castHash}&type=hash&reply_depth=1&include_chronological_parent_casts=false&limit=50`,
