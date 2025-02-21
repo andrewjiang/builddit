@@ -7,6 +7,7 @@
 ### Features
 
 #### Core Functionality
+
 - 🏗️ Browse and discover build requests from /someone-build channel
 - 🔄 Real-time polling with graceful updates (30-second intervals)
 - 🔍 Search functionality across build requests
@@ -14,6 +15,7 @@
 - ♾️ Infinite scroll for seamless browsing
 
 #### Build Request Management
+
 - 🛠️ "I Built This!" feature for claiming builds
 - 💰 Bounty posting system with customizable:
   - Amount and currency (USDC, ETH, DEGEN)
@@ -23,6 +25,7 @@
 - 🔗 Embedded content handling (links, images, nested casts)
 
 #### Authentication & User Experience
+
 - 🔐 Farcaster Auth Kit integration
 - 👤 Public browsing without authentication
 - ✨ Success state feedback
@@ -30,6 +33,7 @@
 - 🎨 Beautiful UI with purple gradient theme
 
 #### Technical Infrastructure
+
 - 📡 Hybrid data fetching with MongoDB and Neynar API
 - 🔄 Automatic data synchronization
 - 🚀 Vercel deployment
@@ -37,18 +41,21 @@
 - 🔒 Secure environment configuration
 
 ### Tech Stack
+
 - Frontend: Next.js 14, React 18, TailwindCSS
 - Backend: Next.js API Routes, MongoDB
 - Authentication: NextAuth.js, Farcaster Auth Kit
 - API Integration: Neynar API
 
 ### Known Issues
+
 - Sign-out flow requires page refresh
 - Some image previews may not load correctly
 - Sorting transitions could be smoother
 - Mobile layout needs optimization
 
 ### Links
+
 - Live Site: [https://someonebuild.fun](https://someonebuild.fun)
 - GitHub Repository: [https://github.com/andrewjiang/builddit](https://github.com/andrewjiang/builddit)
-- Farcaster Channel: [/someone-build](https://warpcast.com/~/channel/someone-build) 
+- Farcaster Channel: [/someone-build](https://warpcast.com/~/channel/someone-build)

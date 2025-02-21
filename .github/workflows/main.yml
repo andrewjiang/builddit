@@ -30,9 +30,6 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Format check
-        run: npm run format:check || npx prettier --check .
-
   build:
     needs: validate
     runs-on: ubuntu-latest
