@@ -1,6 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { SignInButton } from '@farcaster/auth-kit';
+import { useSession } from 'next-auth/react';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -9,6 +10,20 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, message }: AuthModalProps) {
+    const { data: session } = useSession();
+    const [showSuccess, setShowSuccess] = useState(false);
+
+    useEffect(() => {
+        if (session?.user) {
+            setShowSuccess(true);
+            const timer = setTimeout(() => {
+                setShowSuccess(false);
+                onClose();
+            }, 1500); // Close after 1.5 seconds
+            return () => clearTimeout(timer);
+        }
+    }, [session, onClose]);
+
     return (
         <Transition appear show={isOpen} as={Fragment}>
             <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -42,15 +57,40 @@ export function AuthModal({ isOpen, onClose, message }: AuthModalProps) {
                                     as="h3"
                                     className="text-lg font-medium leading-6 text-purple-100 mb-4"
                                 >
-                                    Sign in with Farcaster
+                                    {showSuccess ? 'Successfully Connected!' : 'Sign in with Farcaster'}
                                 </Dialog.Title>
                                 <div className="mt-2">
-                                    <p className="text-sm text-purple-200 mb-6">
-                                        {message}
-                                    </p>
-                                    <div className="flex justify-center">
-                                        <SignInButton />
-                                    </div>
+                                    {showSuccess ? (
+                                        <div className="flex flex-col items-center justify-center py-4">
+                                            <div className="w-12 h-12 rounded-full bg-emerald-400/20 flex items-center justify-center mb-4">
+                                                <svg
+                                                    className="w-6 h-6 text-emerald-400"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M5 13l4 4L19 7"
+                                                    />
+                                                </svg>
+                                            </div>
+                                            <p className="text-emerald-400 text-center">
+                                                Your Farcaster account has been connected successfully!
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <p className="text-sm text-purple-200 mb-6">
+                                                {message}
+                                            </p>
+                                            <div className="flex justify-center">
+                                                <SignInButton />
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </Dialog.Panel>
                         </Transition.Child>

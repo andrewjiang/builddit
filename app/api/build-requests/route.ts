@@ -14,13 +14,15 @@ interface FarcasterUserModel extends Model<IFarcasterUser> {
 
 type MongoDBBuildRequest = FlattenMaps<IBuildRequest> & { _id: unknown; __v: number };
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
     try {
-        const { searchParams } = new URL(request.url);
-        const cursor = searchParams.get('cursor');
-        const limit = parseInt(searchParams.get('limit') || '25', 10);
-        const sort = searchParams.get('sort') as SortOption || 'top_day';
-        const search = searchParams.get('search') || '';
+        const url = new URL(request.url);
+        const cursor = url.searchParams.get('cursor');
+        const limit = parseInt(url.searchParams.get('limit') || '25', 10);
+        const sort = url.searchParams.get('sort') as SortOption || 'top_day';
+        const search = url.searchParams.get('search') || '';
 
         console.log('Fetching build requests with params:', {
             cursor,
@@ -37,7 +39,7 @@ export async function GET(request: Request) {
 
         try {
             // Determine time window based on sort option
-            const now = Date.now();
+            const now = new Date();
             const timeWindow = sort.startsWith('top_') ? sort.split('_')[1] : null;
             const timeWindowMs = timeWindow ? {
                 day: 24 * 60 * 60 * 1000,        // 1 day
@@ -50,18 +52,22 @@ export async function GET(request: Request) {
             const query: Record<string, any> = {};
             
             // Add time window filter
-            if (timeWindowMs) {
+            if (timeWindowMs && timeWindow !== 'all') {
+                const startDate = new Date(now.getTime() - timeWindowMs);
                 query.publishedAt = {
-                    $gte: new Date(now - timeWindowMs)
+                    $gte: startDate
                 };
             }
 
             // Add cursor-based pagination
             if (cursor) {
-                query.publishedAt = {
-                    ...(query.publishedAt || {}),
-                    $lt: new Date(cursor)
-                };
+                const cursorDate = new Date(cursor);
+                if (!isNaN(cursorDate.getTime())) {
+                    query.publishedAt = {
+                        ...(query.publishedAt || {}),
+                        $lt: cursorDate
+                    };
+                }
             }
 
             // Add search filter
@@ -87,59 +93,41 @@ export async function GET(request: Request) {
                 .limit(limit + 1)
                 .lean();
 
-            buildRequests = (mongoResults as MongoDBBuildRequest[]).map(doc => ({
-                hash: doc.hash,
-                text: doc.text,
-                publishedAt: doc.publishedAt,
-                author: {
-                    fid: doc.author.fid,
-                    username: doc.author.username,
-                    displayName: doc.author.displayName,
-                    pfpUrl: doc.author.pfpUrl,
-                },
-                engagement: {
-                    likes: doc.engagement.likes,
-                    recasts: doc.engagement.recasts,
-                    replies: doc.engagement.replies,
-                    watches: doc.engagement.watches,
-                },
-                parentHash: doc.parentHash || '',
-                mentions: doc.mentions,
-                embeds: doc.embeds.map(embed => ({
-                    url: embed.url,
-                    cast_id: embed.cast_id,
-                    cast: embed.cast && {
-                        author: {
-                            fid: embed.cast.author.fid,
-                            username: embed.cast.author.username,
-                            displayName: embed.cast.author.displayName,
-                            pfpUrl: embed.cast.author.pfpUrl,
-                        },
-                        text: embed.cast.text,
-                        hash: embed.cast.hash,
-                        timestamp: embed.cast.timestamp,
-                        embeds: embed.cast.embeds,
+            buildRequests = (mongoResults as MongoDBBuildRequest[]).map(doc => {
+                const publishedAt = doc.publishedAt instanceof Date ? doc.publishedAt : new Date(doc.publishedAt);
+                return {
+                    hash: doc.hash,
+                    text: doc.text,
+                    publishedAt,
+                    author: {
+                        fid: doc.author.fid,
+                        username: doc.author.username,
+                        displayName: doc.author.displayName,
+                        pfpUrl: doc.author.pfpUrl || '',
                     },
-                    metadata: embed.metadata,
-                    type: embed.type,
-                })),
-                lastUpdated: doc.lastUpdated,
-            }));
+                    engagement: doc.engagement,
+                    mentions: doc.mentions,
+                    embeds: doc.embeds.map(embed => ({
+                        url: embed.url,
+                        cast_id: embed.cast_id,
+                        cast: embed.cast,
+                        type: embed.type || 'url',
+                    })),
+                    lastUpdated: doc.lastUpdated || new Date()
+                };
+            });
 
-            // If we got results from MongoDB
-            if (buildRequests.length > 0) {
-                // If we got more results than the limit, set the next cursor
-                if (buildRequests.length > limit) {
-                    const lastItem = buildRequests[buildRequests.length - 2];
-                    nextCursor = lastItem.publishedAt.toISOString();
-                    buildRequests = buildRequests.slice(0, -1);
-                }
-
-                return NextResponse.json({
-                    buildRequests,
-                    next: nextCursor ? { cursor: nextCursor } : undefined
-                });
+            // If we got more results than the limit, set the next cursor
+            if (buildRequests.length > limit) {
+                const lastItem = buildRequests[buildRequests.length - 2];
+                nextCursor = lastItem.publishedAt.toISOString();
+                buildRequests = buildRequests.slice(0, -1);
             }
+
+            return NextResponse.json({
+                buildRequests,
+                next: nextCursor ? { cursor: nextCursor } : undefined
+            });
         } catch (dbError) {
             console.error('MongoDB Error:', dbError);
             // Continue to Neynar fallback

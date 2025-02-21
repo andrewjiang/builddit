@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { signIn, signOut, useSession } from 'next-auth/react';
 
 interface Profile {
-    fid: number;
-    username: string;
+    fid?: number;
+    username?: string;
     displayName?: string;
     pfp?: {
         url: string;
@@ -17,8 +18,8 @@ interface Profile {
 
 interface ProfileState {
     isAuthenticated: boolean;
-    profile: Profile | null;
-    signOut: () => void;
+    profile: Profile;
+    signOut?: () => void;
 }
 
 interface StoredUser {
@@ -31,13 +32,34 @@ interface StoredUser {
     };
 }
 
+const DEFAULT_PROFILE_IMAGE = 'https://warpcast.com/favicon.ico';
+
+// Loading state component
+const LoadingButton = () => (
+    <div className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
+                 font-medium text-purple-900 
+                 shadow-xl shadow-purple-400/20 transition-all duration-300 hover:shadow-purple-400/40">
+        <div className="relative flex items-center space-x-2 rounded-lg transition-all duration-200 ease-out 
+                     group-hover:bg-opacity-0 group-hover:from-purple-300 group-hover:to-purple-200">
+            <div className="h-10 w-[120px] bg-purple-500/20 rounded-lg animate-pulse" />
+        </div>
+    </div>
+);
+
 export function AuthButton() {
-    const { isAuthenticated, profile, signOut } = useProfile() as ProfileState;
+    const { data: session } = useSession();
+    const { isAuthenticated, profile, signOut: farcasterSignOut } = useProfile() as ProfileState;
     const [storedUser, setStoredUser] = useState<StoredUser | null>(null);
+    const [mounted, setMounted] = useState(false);
+    const [imageError, setImageError] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         async function fetchStoredUser() {
-            if (isAuthenticated && profile) {
+            if (isAuthenticated && profile?.fid) {
                 try {
                     const response = await fetch(`/api/users/${profile.fid}`);
                     if (response.ok) {
@@ -51,11 +73,75 @@ export function AuthButton() {
         }
 
         fetchStoredUser();
-    }, [isAuthenticated, profile]);
+    }, [isAuthenticated, profile?.fid]);
+
+    // Handle Farcaster sign in success
+    useEffect(() => {
+        if (isAuthenticated && profile && !session && profile.fid) {
+            // Sign in to Next-Auth with Farcaster credentials
+            signIn('farcaster', {
+                message: '',
+                signature: '',
+                fid: profile.fid.toString(),
+                username: profile.username || '',
+                displayName: profile.displayName || profile.username || '',
+                pfpUrl: profile.pfp?.url || DEFAULT_PROFILE_IMAGE,
+                redirect: false,
+            });
+        }
+    }, [isAuthenticated, profile, session]);
+
+    const handleSignOut = async () => {
+        try {
+            // Clear local state first
+            setStoredUser(null);
+
+            // Sign out from Next-Auth first and wait for it
+            await signOut({ redirect: false });
+
+            // Then sign out from Farcaster and reload the page to ensure clean state
+            if (farcasterSignOut) {
+                await farcasterSignOut();
+                if (typeof window !== 'undefined') {
+                    window.location.reload();
+                }
+            }
+        } catch (error) {
+            console.error('Error during sign out:', error);
+            // Force reload on error to ensure clean state
+            if (typeof window !== 'undefined') {
+                window.location.reload();
+            }
+        }
+    };
+
+    const getProfileImage = () => {
+        if (imageError) return DEFAULT_PROFILE_IMAGE;
+        return storedUser?.pfp?.url || session?.user?.image || DEFAULT_PROFILE_IMAGE;
+    };
+
+    // Show nothing until mounted to prevent hydration mismatch
+    if (!mounted) {
+        return <LoadingButton />;
+    }
+
+    // Show loading state while authentication is being established
+    if (typeof window !== 'undefined' && (
+        session === undefined || 
+        (isAuthenticated && !session?.user?.fid) ||
+        (session?.user?.fid && !session?.user?.username)
+    )) {
+        return <LoadingButton />;
+    }
+
+    // Check if user is authenticated through either method
+    const isLoggedIn = Boolean(session?.user?.fid && session?.user?.username);
+    const displayName = storedUser?.displayName || session?.user?.name || session?.user?.username;
+    const username = storedUser?.username || session?.user?.username || 'Profile';
 
     return (
         <div className="relative">
-            {isAuthenticated && profile ? (
+            {isLoggedIn ? (
                 <Menu as="div" className="relative inline-block text-left">
                     <Menu.Button
                         className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
@@ -68,12 +154,13 @@ export function AuthButton() {
                                      group-hover:from-yellow-300 group-hover:to-yellow-200"
                         >
                             <img
-                                src={storedUser?.pfp.url || 'https://www.warpcast.com/favicon.ico'}
-                                alt={storedUser?.username || profile.username || 'Warpcast'}
+                                src={getProfileImage()}
+                                alt={username}
                                 className="w-5 h-5 rounded-full object-cover"
+                                onError={() => setImageError(true)}
                             />
                             <span className="font-medium">
-                                {storedUser?.displayName || profile.displayName || profile.username || `fid:${profile.fid}`}
+                                {displayName}
                             </span>
                             <ChevronDownIcon className="w-4 h-4 transition-transform duration-200 ui-open:rotate-180" />
                         </span>
@@ -93,7 +180,7 @@ export function AuthButton() {
                                 <Menu.Item>
                                     {({ active }) => (
                                         <button
-                                            onClick={signOut}
+                                            onClick={handleSignOut}
                                             className={`${
                                                 active ? 'bg-purple-800' : ''
                                             } w-full px-4 py-2 text-left text-purple-100 hover:bg-purple-800 first:rounded-t-lg last:rounded-b-lg`}
@@ -109,12 +196,13 @@ export function AuthButton() {
             ) : (
                 <div
                     className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
-                             font-medium text-purple-900 
-                             shadow-xl shadow-purple-400/20 transition-all duration-300 hover:shadow-purple-400/40"
+                             bg-gradient-to-r from-yellow-400 to-yellow-300 font-medium text-purple-900 
+                             shadow-xl shadow-yellow-400/20 transition-all duration-300 hover:shadow-yellow-400/40"
                 >
                     <div
-                        className="relative flex items-center space-x-2 rounded-lg transition-all duration-200 ease-out group-hover:bg-opacity-0 
-                                 group-hover:from-purple-300 group-hover:to-purple-200"
+                        className="relative flex items-center space-x-2 rounded-lg bg-gradient-to-r from-yellow-400 
+                                 to-yellow-300 transition-all duration-200 ease-out group-hover:bg-opacity-0 
+                                 group-hover:from-yellow-300 group-hover:to-yellow-200"
                     >
                         <SignInButton />
                     </div>

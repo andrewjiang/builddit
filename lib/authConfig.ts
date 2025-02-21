@@ -1,10 +1,20 @@
 import { providers } from "ethers";
 
-export const authConfig = {
-  relay: "https://relay.farcaster.xyz",
-  rpcUrl: "https://mainnet.optimism.io",
-  domain: typeof window !== "undefined" ? window.location.host : "",
-  siweUri: typeof window !== "undefined" ? `https://${window.location.host}/login` : "",
-  // @ts-ignore - ethers version type incompatibility
-  provider: new providers.JsonRpcProvider("https://mainnet.optimism.io", 10),
-}; 
+const getConfig = () => {
+  const isClient = typeof window !== "undefined";
+  const domain = isClient ? window.location.host : "";
+  const siweUri = isClient ? `https://${window.location.host}/login` : "";
+
+  return {
+    relay: "https://relay.farcaster.xyz",
+    rpcUrl: "https://mainnet.optimism.io",
+    domain,
+    siweUri,
+    // @ts-ignore - ethers version type incompatibility
+    provider: isClient ? new providers.JsonRpcProvider("https://mainnet.optimism.io", 10) : null,
+    persist: true,
+    timeoutInMs: 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
+};
+
+export const authConfig = getConfig(); 

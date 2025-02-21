@@ -8,34 +8,65 @@ Builddit provides a streamlined interface for browsing and interacting with buil
 
 ## Features
 
-### MVP Features
+### Completed Features
 - [x] Browse build requests from `/someone-build` channel
   - [x] View text posts with author information
-  - [x] Sort by Newest and Top
-  - [x] Periodic polling for new posts (5-minute intervals)
+  - [x] Sort by Newest and Top (Day, Week, Month, All)
+  - [x] Real-time polling with graceful updates
+  - [x] Search functionality
 - [x] Authentication
   - [x] Sign in with Farcaster (Auth Kit integration)
   - [x] Public browsing without authentication
-- [ ] Build Claims
-  - [ ] Authenticated users can claim builds
-  - [ ] Claims posted as quote casts on Farcaster
-  - [ ] Multiple claims per build request
-  - [ ] Automatic tagging of original poster (@ok)
+  - [x] Success state feedback
+- [x] Image Handling
+  - [x] Whitelisted domains support
+  - [x] Safe image component
+  - [x] Fallback for non-whitelisted sources
+- [x] Data Management
+  - [x] MongoDB integration
+  - [x] Neynar API integration
+  - [x] Efficient polling and caching
+  - [x] User profile syncing
+- [x] Build Claims
+  - [x] Claims posted as quote casts
+  - [x] Multiple claims per build request
+  - [x] Automatic tagging of original poster
+
+### In Progress
+- [ ] Authentication Improvements
+  - [x] Session persistence across refreshes
+  - [x] Better error handling
+  - [x] Automatic reconnection
+  - [ ] Smooth sign-out flow
+- [ ] Deployment & CI/CD
+  - [ ] Setup Digital Ocean app platform
+  - [ ] Configure custom domain and SSL
+  - [ ] Setup Github Actions workflow
+  - [ ] Add deployment documentation
 
 ### Backlog Features
 - [ ] Advanced Sorting
-  - [ ] Trending/Hot posts
+  - [ ] Trending/Hot posts algorithm
   - [ ] Smart filtering
-  - [ ] Search functionality
-- [ ] Token Rewards System
-- [ ] Real-time updates
-- [ ] Comment viewing/threading
-- [ ] Notifications system
+  - [ ] Advanced search options
+- [ ] User Experience
+  - [x] Loading states and animations
+  - [x] Error boundaries and recovery
+  - [x] Responsive design improvements
+  - [ ] Smoother state transitions
+- [ ] Social Features
+  - [ ] Comment viewing/threading
+  - [ ] User profiles and activity
+  - [ ] Build request collections
+- [ ] Platform Features
+  - [ ] Token rewards system
+  - [ ] Notifications system
+  - [ ] Analytics dashboard
 
 ## Technical Architecture
 
 ### Tech Stack
-- Frontend: Next.js with TypeScript
+- Frontend: Next.js 14 with TypeScript
 - Backend: Node.js with TypeScript
 - Database: MongoDB
   - Collections: BuildRequest, FarcasterUser, EngagementScore
@@ -164,7 +195,53 @@ interface Claim {
 
 ## Deployment
 
-[To be added: Deployment instructions]
+### Digital Ocean Setup
+1. Create a new app on Digital Ocean App Platform
+2. Configure environment variables:
+   - `MONGODB_URI`
+   - `NEYNAR_API_KEY`
+   - `NEYNAR_CLIENT_ID`
+   - `NEYNAR_CHANNEL_ID`
+   - `NEXTAUTH_URL`
+   - `NEXTAUTH_SECRET`
+   - `NEXT_PUBLIC_RELAY_URL`
+   - `NEXT_PUBLIC_RPC_URL`
+   - `NEXT_PUBLIC_DOMAIN`
+   - `NEXT_PUBLIC_SIWE_URI`
+
+### Domain Configuration
+1. Register domain (if not already owned)
+2. Configure DNS settings in Digital Ocean
+3. Setup SSL certificate
+4. Configure domain in app settings
+
+### CI/CD Pipeline
+1. Github Actions workflow:
+   ```yaml
+   - Build and test
+   - Lint check
+   - Type check
+   - Deploy to staging
+   - Deploy to production
+   ```
+2. Environment specific configurations
+3. Automated deployment on main branch
+4. Manual approval for production deployments
+
+### Monitoring
+1. Setup application monitoring
+2. Configure error tracking
+3. Setup performance monitoring
+4. Configure alerts
+
+## Current Sprint
+- [ ] Setup Digital Ocean deployment
+- [ ] Configure domain and SSL
+- [ ] Implement CI/CD pipeline
+- [ ] Add monitoring and alerts
+- [ ] Enhance sorting transitions
+- [ ] Fix sign-out flow
+- [ ] Add admin controls for polling
 
 ## Contributing
 
@@ -173,12 +250,13 @@ interface Claim {
 ## Progress Tracking
 
 ### Current Sprint
-- [x] Project setup
-- [x] Auth Kit integration
-- [x] Basic build request listing
-- [x] Zod schema validation
-- [x] Neynar API integration
-- [ ] Build claims implementation
+- [ ] Setup Digital Ocean deployment
+- [ ] Configure domain and SSL
+- [ ] Implement CI/CD pipeline
+- [ ] Add monitoring and alerts
+- [ ] Enhance sorting transitions
+- [ ] Fix sign-out flow
+- [ ] Add admin controls for polling
 
 ### Completed
 - [x] Initial project planning
@@ -187,6 +265,28 @@ interface Claim {
 - [x] Data fetching and caching
 - [x] Real-time polling
 - [x] Error handling and validation
+- [x] Authentication persistence
+- [x] Loading states
+- [x] Responsive design
+- [x] FID handling
+
+## Recent Updates
+- Fixed authentication persistence
+- Added loading states and animations
+- Improved error handling and recovery
+- Enhanced responsive design
+- Implemented proper FID handling during sign-in
+- Added whitelisted image domains
+- Implemented silent polling with graceful updates
+- Enhanced auth feedback with success states
+- Improved sorting functionality
+- Added search capabilities
+
+## Known Issues
+- Sign-out flow requires page refresh
+- Some image previews may not load correctly
+- Sorting transitions could be smoother
+- Mobile layout needs optimization
 
 ## Upcoming Tasks
 
@@ -204,10 +304,6 @@ interface Claim {
   - [x] Monitor rate limits
   - [x] Log sync statistics
   - [x] Set up error alerting
-- [x] Implement user data storage
-  - [x] Store Farcaster user profiles
-  - [x] Update user data during build request syncs
-  - [x] Track user engagement metrics
 - [ ] Create admin API endpoints for polling control
   - [ ] Start/stop polling
   - [ ] Adjust polling interval
@@ -254,3 +350,29 @@ interface Claim {
   - [ ] Cache performance
   - [ ] Database metrics
   - [ ] System health
+
+### Authentication Implementation Details
+
+The project uses a combination of Farcaster Auth Kit and Next-Auth to provide a seamless authentication experience:
+
+1. **Farcaster Auth Kit**: Handles the initial Farcaster authentication flow
+   - User signs in with their Farcaster account
+   - Provides access to Farcaster-specific user data
+   - Manages the connection to Farcaster's authentication system
+
+2. **Next-Auth Integration**: Manages session persistence
+   - JWT-based session storage
+   - 7-day session duration
+   - Secure credential handling
+   - Automatic token refresh
+
+3. **State Synchronization**:
+   - Farcaster Auth Kit state is synchronized with Next-Auth
+   - User data is stored in both systems
+   - Seamless state recovery on page refresh
+
+4. **Implementation Files**:
+   - `app/api/auth/[...nextauth]/route.ts`: Next-Auth configuration and API routes
+   - `components/Providers.tsx`: Auth providers setup
+   - `components/AuthButton.tsx`: Authentication UI and state management
+   - `types/next-auth.d.ts`: TypeScript definitions for auth types

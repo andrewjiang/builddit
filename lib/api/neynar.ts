@@ -39,19 +39,25 @@ class NeynarClient {
     private lastRequestTime: number = 0;
     private readonly minRequestInterval: number = 200; // 5 requests per second = 200ms between requests
     private apiKey: string;
+    private readonly channelId: string;
 
-    private constructor() {
-        const apiKey = process.env.NEYNAR_API_KEY;
-        if (!apiKey) {
-            throw new Error('NEYNAR_API_KEY environment variable is not set');
-        }
+    private constructor(apiKey: string, channelId: string) {
         this.apiKey = apiKey;
         this.client = new BaseNeynarAPIClient({ apiKey: this.apiKey });
+        this.channelId = channelId;
     }
 
     public static getInstance(): NeynarClient {
         if (!NeynarClient.instance) {
-            NeynarClient.instance = new NeynarClient();
+            const apiKey = process.env.NEYNAR_API_KEY;
+            if (!apiKey) {
+                throw new Error('NEYNAR_API_KEY environment variable is not set');
+            }
+            const channelId = process.env.NEYNAR_CHANNEL_ID;
+            if (!channelId) {
+                throw new Error('NEYNAR_CHANNEL_ID environment variable is not set');
+            }
+            NeynarClient.instance = new NeynarClient(apiKey, channelId);
         }
         return NeynarClient.instance;
     }
@@ -70,24 +76,18 @@ class NeynarClient {
 
     async fetchBuildRequests(cursor?: string, limit: number = 50) {
         return this.rateLimitedRequest(async () => {
-            const url = `https://api.neynar.com/v2/farcaster/feed/channels?channel_ids=someone-build&with_recasts=true&with_replies=false&members_only=true&limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`;
-            
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'accept': 'application/json',
-                    'X-API-Key': this.apiKey,
-                },
+            const response = await this.client.fetchFeedByChannelIds({
+                channelIds: [this.channelId],
+                withRecasts: true,
+                withReplies: true,
+                membersOnly: true,
+                limit,
+                cursor,
             });
 
-            if (!response.ok) {
-                throw new Error(`Neynar API responded with status: ${response.status}`);
-            }
-
-            const data = await response.json();
             return {
-                casts: data.casts as NeynarCast[],
-                next: data.next as { cursor: string } | undefined,
+                casts: response.casts,
+                next: response.next,
             };
         });
     }
@@ -136,6 +136,34 @@ class NeynarClient {
                 throw error;
             }
         });
+    }
+
+    async fetchReplies(castHash: string): Promise<any[]> {
+        return this.rateLimitedRequest(async () => {
+            try {
+                const response = await fetch(`https://api.neynar.com/v2/farcaster/cast/conversation?identifier=${castHash}&type=hash&reply_depth=1&include_chronological_parent_casts=false&limit=50`, {
+                    method: 'GET',
+                    headers: {
+                        'accept': 'application/json',
+                        'X-API-Key': this.apiKey,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Neynar API responded with status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.conversation?.cast?.direct_replies || [];
+            } catch (error) {
+                console.error(`Error fetching replies for cast ${castHash}:`, error);
+                return [];
+            }
+        });
+    }
+
+    async fetchQuotes(castHash: string): Promise<any[]> {
+        return [];
     }
 }
 

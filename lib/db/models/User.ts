@@ -48,7 +48,6 @@ const FarcasterUserSchema = new Schema<IFarcasterUser>(
 );
 
 // Indexes
-FarcasterUserSchema.index({ fid: 1 });
 FarcasterUserSchema.index({ username: 1 });
 FarcasterUserSchema.index({ lastUpdated: 1 });
 

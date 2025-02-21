@@ -21,8 +21,8 @@ export function useAuth() {
     const { isAuthenticated, profile } = useProfile() as ProfileState;
 
     useEffect(() => {
-        async function storeUserData() {
-            if (isAuthenticated && profile) {
+        const syncUserData = async () => {
+            if (isAuthenticated && profile?.fid) {
                 try {
                     // Fetch complete user data from Neynar
                     const neynarUser = await neynarClient.fetchUserProfile(profile.fid);
@@ -41,13 +41,13 @@ export function useAuth() {
                         }),
                     });
                 } catch (error) {
-                    console.error('Error storing user data:', error);
+                    console.error('Error syncing user data:', error);
                 }
             }
-        }
+        };
 
-        storeUserData();
-    }, [isAuthenticated, profile]);
+        syncUserData();
+    }, [isAuthenticated, profile?.fid]);
 
     return { isAuthenticated, profile };
 } 

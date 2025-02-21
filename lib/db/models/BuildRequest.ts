@@ -26,12 +26,12 @@ export interface IBuildRequest extends Document {
       hash: string;
     };
     cast?: {
-      author: {
+      author?: {
         fid: number;
         username: string;
         displayName?: string;
         pfpUrl?: string;
-      };
+      } | null;
       text: string;
       hash: string;
       timestamp: string;

@@ -8,7 +8,9 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "format": "prettier --write ."
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "type-check": "tsc --noEmit"
     },
     "dependencies": {
         "@farcaster/auth-kit": "^0.1.4",
@@ -25,10 +27,12 @@
         "mongodb": "^6.13.0",
         "mongoose": "^8.10.1",
         "next": "14.1.0",
+        "next-auth": "^4.24.11",
         "node-cache": "^5.1.2",
         "node-fetch": "^2.7.0",
         "react": "^18",
         "react-dom": "^18",
+        "react-hot-toast": "^2.5.2",
         "tailwind-merge": "^2.5.2",
         "tailwindcss-animate": "^1.0.7",
         "zod": "^3.24.2"
