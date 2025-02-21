@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Someone Build It!",
+  title: "Someone Build",
   description:
     "A platform for discovering and claiming Farcaster build requests",
   icons: {

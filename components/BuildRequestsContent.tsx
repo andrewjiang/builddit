@@ -146,9 +146,23 @@ export function BuildRequestsContent({
                     🛠️
                   </span>
                 </div>
-                <h1 className="ml-3 text-2xl font-semibold text-white tracking-tight">
-                  Someone Build It
-                </h1>
+                <div className="ml-3">
+                  <h1 className="text-2xl font-semibold text-white tracking-tight">
+                    Someone Build
+                  </h1>
+                  <p className="text-sm text-purple-300 mt-0.5">
+                    <span className="hidden md:inline">Explore and fulfill requests in{" "}</span>
+                    <span className="md:hidden">An explorer for{" "}</span>
+                    <a
+                      href="https://warpcast.com/~/channel/someone-build"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                    >
+                      /someone-build
+                    </a>
+                  </p>
+                </div>
               </div>
 
               {/* Desktop Buttons */}
