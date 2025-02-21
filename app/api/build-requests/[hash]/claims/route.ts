@@ -83,7 +83,7 @@ export async function POST(
     // Increment the claimsCount on the build request
     await BuildRequest.findOneAndUpdate(
       { hash: params.hash },
-      { $inc: { claimsCount: 1 } }
+      { $inc: { claimsCount: 1 } },
     );
 
     return NextResponse.json({ claim });

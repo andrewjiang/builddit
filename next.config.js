@@ -41,7 +41,7 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "i.seadn.io",
-      }
+      },
     ],
   },
 };

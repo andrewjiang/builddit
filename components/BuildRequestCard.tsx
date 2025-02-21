@@ -68,11 +68,16 @@ function EmbeddedCastCard({
             )}
             {embed.url && (
               <div className="mt-2 overflow-hidden">
-                {isImageUrl(embed.url) || embed.metadata?.html?.ogImage?.[0]?.url ? (
+                {isImageUrl(embed.url) ||
+                embed.metadata?.html?.ogImage?.[0]?.url ? (
                   <div className="relative w-full max-w-[480px] rounded-lg overflow-hidden bg-purple-800/50">
                     <div className="relative aspect-[16/9] max-h-[320px]">
                       <SafeImage
-                        src={isImageUrl(embed.url) ? embed.url : embed.metadata?.html?.ogImage?.[0]?.url}
+                        src={
+                          isImageUrl(embed.url)
+                            ? embed.url
+                            : embed.metadata?.html?.ogImage?.[0]?.url
+                        }
                         alt={embed.metadata?.html?.ogTitle || "Embedded image"}
                         className="absolute inset-0 w-full h-full object-cover rounded-lg"
                       />
@@ -124,22 +129,22 @@ function EmbeddedCastCard({
 function isImageUrl(url: string): boolean {
   // Check for common image extensions
   if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) return true;
-  
+
   // Check for common image hosting domains
-  if (url.includes('imagedelivery.net')) return true;
-  if (url.includes('openseauserdata.com')) return true;
-  if (url.includes('i.imgur.com')) return true;
-  if (url.includes('cdn.discordapp.com')) return true;
-  
+  if (url.includes("imagedelivery.net")) return true;
+  if (url.includes("openseauserdata.com")) return true;
+  if (url.includes("i.imgur.com")) return true;
+  if (url.includes("cdn.discordapp.com")) return true;
+
   // Google Docs image URLs
-  if (url.includes('googleusercontent.com/docs')) return true;
-  
+  if (url.includes("googleusercontent.com/docs")) return true;
+
   // Firefly media URLs
-  if (url.includes('media.firefly.land/farcaster')) return true;
-  
+  if (url.includes("media.firefly.land/farcaster")) return true;
+
   // Empire Builder OG image URLs
-  if (url.includes('empirebuilder.world/api/og')) return true;
-  
+  if (url.includes("empirebuilder.world/api/og")) return true;
+
   return false;
 }
 
@@ -303,12 +308,19 @@ export function BuildRequestCard({ buildRequest }: BuildRequestCardProps) {
                     <EmbeddedCastCard cast={embed.cast} />
                   ) : embed.url ? (
                     <div className="mt-2 overflow-hidden">
-                      {(embed.metadata?.html?.ogImage?.[0]?.url || isImageUrl(embed.url)) ? (
+                      {embed.metadata?.html?.ogImage?.[0]?.url ||
+                      isImageUrl(embed.url) ? (
                         <div className="relative w-full max-w-[480px] rounded-lg overflow-hidden bg-purple-800/50">
                           <div className="relative aspect-[16/9] max-h-[320px]">
                             <SafeImage
-                              src={embed.metadata?.html?.ogImage?.[0]?.url || embed.url}
-                              alt={embed.metadata?.html?.ogTitle || "Embedded image"}
+                              src={
+                                embed.metadata?.html?.ogImage?.[0]?.url ||
+                                embed.url
+                              }
+                              alt={
+                                embed.metadata?.html?.ogTitle ||
+                                "Embedded image"
+                              }
                               className="absolute inset-0 w-full h-full object-cover rounded-lg"
                             />
                           </div>

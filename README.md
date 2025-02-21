@@ -9,6 +9,7 @@ Builddit provides a streamlined interface for browsing and interacting with buil
 ## Features
 
 ### Core Features
+
 - Browse build requests from `/someone-build` channel
   - View text posts with author information
   - Sort by Newest and Top (Day, Week, Month, All)
@@ -37,17 +38,20 @@ Builddit provides a streamlined interface for browsing and interacting with buil
 ## Development Setup
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/andrewjiang/builddit.git
    cd builddit
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Create a `.env` file with the following variables:
+
    ```
    # Neynar API Configuration
    NEYNAR_API_KEY=your_api_key
@@ -444,6 +448,7 @@ The project uses a combination of Farcaster Auth Kit and Next-Auth to provide a 
 The application uses a hybrid data fetching approach to balance performance and data freshness:
 
 ### Frontend Polling
+
 - The frontend polls every 30 seconds for new content
 - Each poll first attempts to fetch from MongoDB for performance
 - Falls back to Neynar API if MongoDB query fails or returns no results
@@ -451,7 +456,9 @@ The application uses a hybrid data fetching approach to balance performance and 
 - Additional posts are appended at the bottom during infinite scroll
 
 ### Database Updates
+
 1. **Primary Path (MongoDB)**
+
    - Most reads hit MongoDB first for better performance
    - Stores complete build request data including:
      - Cast metadata (text, timestamp, author)
@@ -466,7 +473,9 @@ The application uses a hybrid data fetching approach to balance performance and 
    - Uses upsert operations to ensure data consistency
 
 ### Historical Sync
+
 A separate script (`scripts/sync-historical-builds.cjs`) handles complete historical data synchronization:
+
 - Processes builds in batches (100 per batch)
 - Includes full engagement metrics
 - Syncs all replies and recasts
@@ -474,11 +483,13 @@ A separate script (`scripts/sync-historical-builds.cjs`) handles complete histor
 - Maintains user profiles
 
 ### Known Limitations
+
 - Frontend polling might miss updates if MongoDB always returns results
 - Engagement metrics might be stale between polls
 - No real-time updates for likes/recasts
 
 ### Future Improvements
+
 - [ ] Add timestamp checks to force Neynar refresh for stale data
 - [ ] Implement background job for periodic Neynar sync
 - [ ] Add Neynar webhook support for real-time updates
@@ -489,6 +500,7 @@ A separate script (`scripts/sync-historical-builds.cjs`) handles complete histor
 For reliable execution of background tasks and data synchronization, we use Digital Ocean App Platform Jobs:
 
 1. **Historical Build Sync Job**
+
    ```yaml
    jobs:
    - name: sync-historical-builds
@@ -523,6 +535,7 @@ For reliable execution of background tasks and data synchronization, we use Digi
    ```
 
 #### Benefits of Digital Ocean Jobs:
+
 - No execution time limits
 - Reliable scheduling
 - Detailed logging and monitoring
@@ -531,6 +544,7 @@ For reliable execution of background tasks and data synchronization, we use Digi
 - Cost-effective for background tasks
 
 #### Setup Instructions:
+
 1. Create a new App Platform project
 2. Add the jobs section to your `app.yaml`
 3. Configure environment variables

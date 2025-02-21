@@ -9,4 +9,4 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["sfo1"]
-} 
+}

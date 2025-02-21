@@ -8,7 +8,7 @@ const WHITELISTED_DOMAINS = [
   "docs.google.com",
   "media.firefly.land",
   "empirebuilder.world",
-  "i.seadn.io"
+  "i.seadn.io",
 ];
 
 export function isWhitelistedImageDomain(url: string): boolean {
@@ -19,7 +19,10 @@ export function isWhitelistedImageDomain(url: string): boolean {
         // Handle wildcard subdomains
         return parsedUrl.hostname.endsWith(domain);
       }
-      return parsedUrl.hostname === domain || parsedUrl.hostname.endsWith('.' + domain);
+      return (
+        parsedUrl.hostname === domain ||
+        parsedUrl.hostname.endsWith("." + domain)
+      );
     });
   } catch {
     return false;

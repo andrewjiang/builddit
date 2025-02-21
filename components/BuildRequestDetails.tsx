@@ -59,7 +59,9 @@ function EmbeddedCastCard({
           )}
         </div>
       </div>
-      <p className="text-purple-100 whitespace-pre-wrap break-words overflow-hidden overflow-wrap-anywhere mb-3">{cast.text}</p>
+      <p className="text-purple-100 whitespace-pre-wrap break-words overflow-hidden overflow-wrap-anywhere mb-3">
+        {cast.text}
+      </p>
       {cast.embeds && cast.embeds.length > 0 && (
         <div className="space-y-2">
           {cast.embeds.map((embed: Embed, index: number) => (
@@ -99,23 +101,23 @@ function EmbeddedCastCard({
 function isImageUrl(url: string): boolean {
   // Check for common image extensions
   if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) return true;
-  
+
   // Check for common image hosting domains
-  if (url.includes('imagedelivery.net')) return true;
-  if (url.includes('openseauserdata.com')) return true;
-  if (url.includes('i.imgur.com')) return true;
-  if (url.includes('cdn.discordapp.com')) return true;
-  if (url.includes('i.seadn.io')) return true;
-  
+  if (url.includes("imagedelivery.net")) return true;
+  if (url.includes("openseauserdata.com")) return true;
+  if (url.includes("i.imgur.com")) return true;
+  if (url.includes("cdn.discordapp.com")) return true;
+  if (url.includes("i.seadn.io")) return true;
+
   // Google Docs image URLs
-  if (url.includes('googleusercontent.com/docs')) return true;
-  
+  if (url.includes("googleusercontent.com/docs")) return true;
+
   // Firefly media URLs
-  if (url.includes('media.firefly.land/farcaster')) return true;
-  
+  if (url.includes("media.firefly.land/farcaster")) return true;
+
   // Empire Builder OG image URLs
-  if (url.includes('empirebuilder.world/api/og')) return true;
-  
+  if (url.includes("empirebuilder.world/api/og")) return true;
+
   return false;
 }
 
@@ -203,12 +205,21 @@ export function BuildRequestDetails({
                     <EmbeddedCastCard cast={embed.cast} />
                   ) : embed.url ? (
                     <div className="mt-2 overflow-hidden">
-                      {(isImageUrl(embed.url) || embed.metadata?.html?.ogImage?.[0]?.url) ? (
+                      {isImageUrl(embed.url) ||
+                      embed.metadata?.html?.ogImage?.[0]?.url ? (
                         <div className="relative w-full rounded-lg overflow-hidden bg-purple-800/50">
                           <div className="relative aspect-[16/9]">
                             <SafeImage
-                              src={isImageUrl(embed.url) ? embed.url : (embed.metadata?.html?.ogImage?.[0]?.url || embed.url)}
-                              alt={embed.metadata?.html?.ogTitle || "Embedded image"}
+                              src={
+                                isImageUrl(embed.url)
+                                  ? embed.url
+                                  : embed.metadata?.html?.ogImage?.[0]?.url ||
+                                    embed.url
+                              }
+                              alt={
+                                embed.metadata?.html?.ogTitle ||
+                                "Embedded image"
+                              }
                               className="absolute inset-0 w-full h-full object-cover rounded-lg"
                             />
                           </div>
@@ -382,17 +393,26 @@ export function BuildRequestDetails({
             timestamp: buildRequest.timestamp,
             embeds: buildRequest.embeds,
             reactions: {
-              likes_count: "reactions" in buildRequest ? buildRequest.reactions.likes_count : (buildRequest as any).engagement?.likes || 0,
-              recasts_count: "reactions" in buildRequest ? buildRequest.reactions.recasts_count : (buildRequest as any).engagement?.recasts || 0,
+              likes_count:
+                "reactions" in buildRequest
+                  ? buildRequest.reactions.likes_count
+                  : (buildRequest as any).engagement?.likes || 0,
+              recasts_count:
+                "reactions" in buildRequest
+                  ? buildRequest.reactions.recasts_count
+                  : (buildRequest as any).engagement?.recasts || 0,
               likes: [],
-              recasts: []
+              recasts: [],
             },
             replies: {
-              count: "replies" in buildRequest ? buildRequest.replies.count : (buildRequest as any).engagement?.replies || 0
+              count:
+                "replies" in buildRequest
+                  ? buildRequest.replies.count
+                  : (buildRequest as any).engagement?.replies || 0,
             },
             mentioned_profiles: buildRequest.mentioned_profiles || [],
             author: buildRequest.author,
-            channel: buildRequest.channel
+            channel: buildRequest.channel,
           }}
           isOpen={isClaimModalOpen}
           onClose={() => setIsClaimModalOpen(false)}

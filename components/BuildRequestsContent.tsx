@@ -62,7 +62,7 @@ export function BuildRequestsContent({
         // Only merge new posts at the top
         setBuildRequests((prevRequests) => {
           const newPosts = response.buildRequests.filter(
-            (post) => !prevRequests.some((p) => p.hash === post.hash)
+            (post) => !prevRequests.some((p) => p.hash === post.hash),
           );
           return [...newPosts, ...prevRequests];
         });
@@ -70,7 +70,7 @@ export function BuildRequestsContent({
         // For infinite scroll, append new unique posts
         setBuildRequests((prev) => {
           const uniquePosts = response.buildRequests.filter(
-            (post) => !prev.some((p) => p.hash === post.hash)
+            (post) => !prev.some((p) => p.hash === post.hash),
           );
           return [...prev, ...uniquePosts];
         });
@@ -101,7 +101,7 @@ export function BuildRequestsContent({
     setBuildRequests([]);
     setCursor(undefined);
     setHasMore(true);
-    
+
     // Always fetch when sort or search changes
     fetchData();
 
@@ -133,8 +133,8 @@ export function BuildRequestsContent({
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     // If searching and current sort is a "top" sort, switch to "top_all"
-    if (query && currentSort.startsWith('top_')) {
-      setCurrentSort('top_all');
+    if (query && currentSort.startsWith("top_")) {
+      setCurrentSort("top_all");
     }
   };
 
@@ -153,15 +153,20 @@ export function BuildRequestsContent({
       const observer = new IntersectionObserver(
         (entries) => {
           // Only trigger if we're scrolling up from below
-          if (entries[0].isIntersecting && hasMore && !isLoading && !isLoadingMore) {
+          if (
+            entries[0].isIntersecting &&
+            hasMore &&
+            !isLoading &&
+            !isLoadingMore
+          ) {
             loadMore();
           }
         },
-        { 
+        {
           threshold: 0,
           // Add a 200px margin to trigger loading before reaching the very bottom
-          rootMargin: '200px 0px'
-        }
+          rootMargin: "200px 0px",
+        },
       );
 
       observer.observe(node);
@@ -170,7 +175,7 @@ export function BuildRequestsContent({
         observer.disconnect();
       };
     },
-    [hasMore, isLoading, isLoadingMore, loadMore]
+    [hasMore, isLoading, isLoadingMore, loadMore],
   );
 
   return (
@@ -213,8 +218,10 @@ export function BuildRequestsContent({
                     Someone Build
                   </h1>
                   <p className="text-sm text-purple-300 mt-0.5">
-                    <span className="hidden md:inline">Explore and fulfill requests in{" "}</span>
-                    <span className="md:hidden">An explorer for{" "}</span>
+                    <span className="hidden md:inline">
+                      Explore and fulfill requests in{" "}
+                    </span>
+                    <span className="md:hidden">An explorer for </span>
                     <a
                       href="https://warpcast.com/~/channel/someone-build"
                       target="_blank"

@@ -107,7 +107,7 @@ class NeynarClient {
       const response = await this.rateLimitedRequest(() =>
         this.client!.fetchBulkUsers({
           fids: [fid],
-        })
+        }),
       );
       return response.users[0];
     } catch (error) {

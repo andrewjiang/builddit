@@ -9,7 +9,11 @@ interface BountyModalProps {
   onClose: () => void;
 }
 
-export function BountyModal({ buildRequest, isOpen, onClose }: BountyModalProps) {
+export function BountyModal({
+  buildRequest,
+  isOpen,
+  onClose,
+}: BountyModalProps) {
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("USDC");
   const [deadline, setDeadline] = useState("");
@@ -18,17 +22,17 @@ export function BountyModal({ buildRequest, isOpen, onClose }: BountyModalProps)
   // Calculate default deadline (2 weeks from now)
   const twoWeeksFromNow = new Date();
   twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
-  const defaultDeadline = twoWeeksFromNow.toISOString().split('T')[0];
+  const defaultDeadline = twoWeeksFromNow.toISOString().split("T")[0];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Create the Warpcast intent URL
     const intentUrl = new URL("https://warpcast.com/~/compose");
-    
+
     // Format the text for the bounty
-    const bountyText = `I'd love for someone to build this!\n\nAmount: ${amount} ${currency}${deadline ? `\nDeadline: ${deadline}` : ''}${description ? `\n\n${description}` : ''}\n\n@bountybot`;
-    
+    const bountyText = `I'd love for someone to build this!\n\nAmount: ${amount} ${currency}${deadline ? `\nDeadline: ${deadline}` : ""}${description ? `\n\n${description}` : ""}\n\n@bountybot`;
+
     intentUrl.searchParams.set("text", bountyText);
     intentUrl.searchParams.set(
       "embeds[]",
@@ -143,7 +147,7 @@ export function BountyModal({ buildRequest, isOpen, onClose }: BountyModalProps)
                       id="deadline"
                       value={deadline}
                       onChange={(e) => setDeadline(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
+                      min={new Date().toISOString().split("T")[0]}
                       placeholder={defaultDeadline}
                       className="w-full px-4 py-2 bg-purple-800/50 border border-purple-700 rounded-lg 
                                text-purple-100 placeholder-purple-400 focus:outline-none focus:ring-2 
@@ -202,4 +206,4 @@ export function BountyModal({ buildRequest, isOpen, onClose }: BountyModalProps)
       </Dialog>
     </Transition>
   );
-} 
+}

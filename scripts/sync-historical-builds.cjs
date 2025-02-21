@@ -164,9 +164,11 @@ class NeynarClient {
 
       if (response.status === 503 && retryCount < this.maxRetries) {
         const delay = this.baseDelay * Math.pow(2, retryCount); // Exponential backoff
-        console.log(`\nReceived 503 error (attempt ${retryCount + 1}/${this.maxRetries})`);
-        console.log(`Waiting ${delay/1000} seconds before retry...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        console.log(
+          `\nReceived 503 error (attempt ${retryCount + 1}/${this.maxRetries})`,
+        );
+        console.log(`Waiting ${delay / 1000} seconds before retry...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
         return this.fetchWithRetry(url, retryCount + 1);
       }
 
@@ -174,9 +176,12 @@ class NeynarClient {
     } catch (error) {
       if (retryCount < this.maxRetries) {
         const delay = this.baseDelay * Math.pow(2, retryCount);
-        console.log(`\nNetwork error (attempt ${retryCount + 1}/${this.maxRetries}):`, error.message);
-        console.log(`Waiting ${delay/1000} seconds before retry...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        console.log(
+          `\nNetwork error (attempt ${retryCount + 1}/${this.maxRetries}):`,
+          error.message,
+        );
+        console.log(`Waiting ${delay / 1000} seconds before retry...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
         return this.fetchWithRetry(url, retryCount + 1);
       }
       throw error;
@@ -458,7 +463,7 @@ async function syncCasts(cursor, limit = 50) {
       // Update the build request with the claims count
       await BuildRequest.findOneAndUpdate(
         { hash: cast.hash },
-        { $set: { claimsCount: taggedClaimsCount } }
+        { $set: { claimsCount: taggedClaimsCount } },
       );
 
       processedCasts.push(buildRequest);
@@ -497,11 +502,11 @@ async function delay(ms) {
 
 async function migrateClaimsCounts() {
   console.log("\n=== Migrating Claims Counts ===");
-  
+
   // Get total count first
   const totalBuildRequests = await BuildRequest.countDocuments();
   console.log(`Found ${totalBuildRequests} build requests to process`);
-  
+
   const BATCH_SIZE = 50;
   let processed = 0;
   let updated = 0;
@@ -512,20 +517,20 @@ async function migrateClaimsCounts() {
     const buildRequests = await BuildRequest.find({})
       .skip(skip)
       .limit(BATCH_SIZE)
-      .select('hash claimsCount');
+      .select("hash claimsCount");
 
     for (const buildRequest of buildRequests) {
       // Count tagged claims for this build request
       const claimsCount = await BuildClaim.countDocuments({
         buildRequestHash: buildRequest.hash,
-        isTagged: true
+        isTagged: true,
       });
-      
+
       // Update the build request if count is different
       if (buildRequest.claimsCount !== claimsCount) {
         await BuildRequest.updateOne(
           { hash: buildRequest.hash },
-          { $set: { claimsCount } }
+          { $set: { claimsCount } },
         );
         updated++;
       }
@@ -537,18 +542,24 @@ async function migrateClaimsCounts() {
         const itemsPerSecond = processed / elapsedSeconds;
         const remainingItems = totalBuildRequests - processed;
         const estimatedSecondsLeft = remainingItems / itemsPerSecond;
-        
-        console.log(`Progress: ${processed}/${totalBuildRequests} (${Math.round(processed/totalBuildRequests*100)}%)`);
+
+        console.log(
+          `Progress: ${processed}/${totalBuildRequests} (${Math.round((processed / totalBuildRequests) * 100)}%)`,
+        );
         console.log(`Updated: ${updated} records`);
         console.log(`Speed: ${itemsPerSecond.toFixed(2)} items/sec`);
-        console.log(`Estimated time remaining: ${Math.round(estimatedSecondsLeft)} seconds\n`);
+        console.log(
+          `Estimated time remaining: ${Math.round(estimatedSecondsLeft)} seconds\n`,
+        );
       }
     }
   }
-  
+
   const totalTimeSeconds = (Date.now() - startTime) / 1000;
   console.log(`\nMigration Complete!`);
-  console.log(`Processed ${processed} build requests in ${totalTimeSeconds.toFixed(1)} seconds`);
+  console.log(
+    `Processed ${processed} build requests in ${totalTimeSeconds.toFixed(1)} seconds`,
+  );
   console.log(`Updated ${updated} records with new claims counts`);
   console.log("=== Migration Complete ===\n");
 }

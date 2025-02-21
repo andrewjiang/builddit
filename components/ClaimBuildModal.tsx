@@ -93,7 +93,7 @@ export function ClaimBuildModal({
     console.log("Form submission started");
     e.preventDefault();
     console.log("Session state:", { session });
-    
+
     if (!session?.user) {
       console.log("Not authenticated, no session user found");
       return;
@@ -154,7 +154,9 @@ export function ClaimBuildModal({
       setStep("preview");
     } catch (error) {
       console.error("Error submitting claim:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to submit build claim");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit build claim",
+      );
     } finally {
       setIsSubmitting(false);
     }
