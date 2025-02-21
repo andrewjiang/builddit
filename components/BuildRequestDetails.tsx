@@ -154,7 +154,7 @@ export function BuildRequestDetails({
           background: `radial-gradient(circle 400px at ${mousePosition.x}px ${mousePosition.y}px, rgba(250, 204, 21, 0.15), transparent 80%)`,
         }}
       />
-      <div className="max-w-[1024px] mx-auto px-4 py-8">
+      <div className="max-w-[1024px] mx-auto px-4 md:px-8 py-8">
         <Link
           href="/"
           className="text-purple-200 hover:text-white mb-4 inline-flex items-center transition-colors"

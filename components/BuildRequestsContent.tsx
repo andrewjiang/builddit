@@ -187,10 +187,10 @@ export function BuildRequestsContent({
         }}
       />
 
-      <div className="max-w-[1024px] mx-auto">
+      <div className="max-w-[1024px] mx-auto px-4 md:px-8">
         {/* Header */}
         <header className="relative bg-purple-900 border-b border-purple-700/50">
-          <div className="relative px-4 py-4">
+          <div className="relative py-4">
             <div className="flex flex-col">
               {/* Logo, Title, and Mobile Menu Row */}
               <div className="flex items-center justify-between">
@@ -345,7 +345,7 @@ export function BuildRequestsContent({
         </header>
 
         {/* Main Content */}
-        <main className="container mx-auto py-8">
+        <main className="py-8">
           {/* Filter Bar */}
           <FilterBar
             currentSort={currentSort}
@@ -400,7 +400,7 @@ export function BuildRequestsContent({
 
         {/* Footer */}
         <footer className="relative bg-purple-900 border-t border-purple-700/50 py-8 mt-12">
-          <div className="container relative mx-auto px-4 text-center">
+          <div className="relative text-center">
             <p className="text-purple-200/80 font-medium">
               Built by{" "}
               <a
