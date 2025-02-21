@@ -1,4 +1,4 @@
-import { NeynarAPIClient as BaseNeynarAPIClient } from '@neynar/nodejs-sdk';
+import { NeynarAPIClient as BaseNeynarAPIClient } from "@neynar/nodejs-sdk";
 
 export interface NeynarAPIClient extends BaseNeynarAPIClient {
   lookupUserByFid(params: { fid: number }): Promise<{
@@ -41,4 +41,4 @@ export interface NeynarAPIClient extends BaseNeynarAPIClient {
       };
     };
   }>;
-} 
+}

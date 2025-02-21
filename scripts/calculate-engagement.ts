@@ -1,10 +1,10 @@
-import { config } from 'dotenv';
-import { resolve } from 'path';
-import { connectToDatabase, disconnectFromDatabase } from '@/lib/db/connect';
-import { BuildRequest } from '@/lib/db/models/BuildRequest';
-import { EngagementScore, TimeRange } from '@/lib/db/models/EngagementScore';
+import { config } from "dotenv";
+import { resolve } from "path";
+import { connectToDatabase, disconnectFromDatabase } from "@/lib/db/connect";
+import { BuildRequest } from "@/lib/db/models/BuildRequest";
+import { EngagementScore, TimeRange } from "@/lib/db/models/EngagementScore";
 
-config({ path: resolve(__dirname, '../.env') });
+config({ path: resolve(__dirname, "../.env") });
 
 const WEIGHTS = {
   LIKE: 2,
@@ -16,7 +16,7 @@ const WEIGHTS = {
 async function calculateEngagementScores() {
   try {
     await connectToDatabase();
-    console.log('Connected to MongoDB');
+    console.log("Connected to MongoDB");
 
     // Get all build requests
     const buildRequests = await BuildRequest.find({}).sort({ publishedAt: -1 });
@@ -38,7 +38,7 @@ async function calculateEngagementScores() {
         watches: buildRequest.engagement?.watches || 0,
       };
 
-      const score = 
+      const score =
         metrics.likes * WEIGHTS.LIKE +
         metrics.recasts * WEIGHTS.RECAST +
         metrics.replies * WEIGHTS.REPLY +
@@ -46,7 +46,7 @@ async function calculateEngagementScores() {
 
       return {
         buildRequestHash: buildRequest.hash,
-        timeRange: 'month' as TimeRange,
+        timeRange: "month" as TimeRange,
         score: Math.round(score * 100) / 100, // Round to 2 decimal places
         periodStart,
         periodEnd: now,
@@ -63,14 +63,15 @@ async function calculateEngagementScores() {
       .sort({ score: -1 })
       .limit(10);
 
-    console.log('\nTop 10 Engagement Scores:');
+    console.log("\nTop 10 Engagement Scores:");
     topScores.forEach((score, index) => {
-      console.log(`${index + 1}. Hash: ${score.buildRequestHash}, Score: ${score.score}`);
+      console.log(
+        `${index + 1}. Hash: ${score.buildRequestHash}, Score: ${score.score}`,
+      );
       console.log(`   Metrics: ${JSON.stringify(score.metrics)}\n`);
     });
-
   } catch (error) {
-    console.error('Error calculating engagement scores:', error);
+    console.error("Error calculating engagement scores:", error);
   } finally {
     await disconnectFromDatabase();
     process.exit(0);

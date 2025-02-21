@@ -9,6 +9,7 @@ Builddit provides a streamlined interface for browsing and interacting with buil
 ## Features
 
 ### Completed Features
+
 - [x] Browse build requests from `/someone-build` channel
   - [x] View text posts with author information
   - [x] Sort by Newest and Top (Day, Week, Month, All)
@@ -33,6 +34,7 @@ Builddit provides a streamlined interface for browsing and interacting with buil
   - [x] Automatic tagging of original poster
 
 ### In Progress
+
 - [ ] Authentication Improvements
   - [x] Session persistence across refreshes
   - [x] Better error handling
@@ -45,6 +47,7 @@ Builddit provides a streamlined interface for browsing and interacting with buil
   - [ ] Add deployment documentation
 
 ### Backlog Features
+
 - [ ] Advanced Sorting
   - [ ] Trending/Hot posts algorithm
   - [ ] Smart filtering
@@ -66,6 +69,7 @@ Builddit provides a streamlined interface for browsing and interacting with buil
 ## Technical Architecture
 
 ### Tech Stack
+
 - Frontend: Next.js 14 with TypeScript
 - Backend: Node.js with TypeScript
 - Database: MongoDB
@@ -77,14 +81,15 @@ Builddit provides a streamlined interface for browsing and interacting with buil
 ### Data Models
 
 #### FarcasterUser
+
 ```typescript
 interface FarcasterUser {
-  fid: number;              // Farcaster ID
-  username: string;         // Farcaster username
-  displayName: string;      // Display name
+  fid: number; // Farcaster ID
+  username: string; // Farcaster username
+  displayName: string; // Display name
   pfp: {
-    url: string;           // Profile picture URL
-    verified: boolean;     // Profile picture verification status
+    url: string; // Profile picture URL
+    verified: boolean; // Profile picture verification status
   };
   profile: {
     bio: {
@@ -101,16 +106,17 @@ interface FarcasterUser {
 ```
 
 #### Build Request
+
 ```typescript
 interface BuildRequest {
-  hash: string;              // Unique identifier (Farcaster cast hash)
-  text: string;             // Post content
-  timestamp: string;        // Creation timestamp
+  hash: string; // Unique identifier (Farcaster cast hash)
+  text: string; // Post content
+  timestamp: string; // Creation timestamp
   author: {
-    fid: number;           // Farcaster ID
-    username: string;      // Farcaster username
-    display_name: string;  // Display name
-    pfp_url: string;      // Profile picture URL
+    fid: number; // Farcaster ID
+    username: string; // Farcaster username
+    display_name: string; // Display name
+    pfp_url: string; // Profile picture URL
   };
   reactions: {
     likes_count: number;
@@ -144,30 +150,33 @@ interface BuildRequest {
 ```
 
 #### Claim
+
 ```typescript
 interface Claim {
-  id: string;              // Unique identifier
-  castId: string;          // Farcaster quote cast ID
-  buildRequestId: string;  // Reference to original build request
+  id: string; // Unique identifier
+  castId: string; // Farcaster quote cast ID
+  buildRequestId: string; // Reference to original build request
   author: {
-    fid: string;          // Farcaster ID
-    username: string;     // Farcaster username
+    fid: string; // Farcaster ID
+    username: string; // Farcaster username
   };
-  description: string;     // Build description
-  url: string;            // Project URL
-  timestamp: Date;        // Claim timestamp
+  description: string; // Build description
+  url: string; // Project URL
+  timestamp: Date; // Claim timestamp
 }
 ```
 
 ### API Endpoints
 
 #### Public Endpoints
+
 - `GET /api/builds` - List build requests
   - Query params: sort (newest/top), page, limit
 - `GET /api/builds/:id` - Get specific build request
 - `GET /api/builds/:id/claims` - List claims for a build
 
 #### Authenticated Endpoints
+
 - `POST /api/builds/:id/claims` - Submit a new claim
 - `GET /api/user/profile` - Get authenticated user profile
 
@@ -178,17 +187,20 @@ interface Claim {
 ## Testing Strategy
 
 ### Unit Tests
+
 - Components: React Testing Library
 - API Routes: Jest
 - Data Models: Jest
 - Utility Functions: Jest
 
 ### Integration Tests
+
 - API Integration
 - Authentication Flow
 - Build Claim Flow
 
 ### Mocking Strategy
+
 - Farcaster API responses
 - Authentication states
 - Database operations
@@ -196,6 +208,7 @@ interface Claim {
 ## Deployment
 
 ### Digital Ocean Setup
+
 1. Create a new app on Digital Ocean App Platform
 2. Configure environment variables:
    - `MONGODB_URI`
@@ -210,12 +223,14 @@ interface Claim {
    - `NEXT_PUBLIC_SIWE_URI`
 
 ### Domain Configuration
+
 1. Register domain (if not already owned)
 2. Configure DNS settings in Digital Ocean
 3. Setup SSL certificate
 4. Configure domain in app settings
 
 ### CI/CD Pipeline
+
 1. Github Actions workflow:
    ```yaml
    - Build and test
@@ -229,12 +244,14 @@ interface Claim {
 4. Manual approval for production deployments
 
 ### Monitoring
+
 1. Setup application monitoring
 2. Configure error tracking
 3. Setup performance monitoring
 4. Configure alerts
 
 ## Current Sprint
+
 - [ ] Setup Digital Ocean deployment
 - [ ] Configure domain and SSL
 - [ ] Implement CI/CD pipeline
@@ -250,6 +267,7 @@ interface Claim {
 ## Progress Tracking
 
 ### Current Sprint
+
 - [ ] Setup Digital Ocean deployment
 - [ ] Configure domain and SSL
 - [ ] Implement CI/CD pipeline
@@ -259,6 +277,7 @@ interface Claim {
 - [ ] Add admin controls for polling
 
 ### Completed
+
 - [x] Initial project planning
 - [x] Technical specification
 - [x] Authentication flow
@@ -271,6 +290,7 @@ interface Claim {
 - [x] FID handling
 
 ## Recent Updates
+
 - Fixed authentication persistence
 - Added loading states and animations
 - Improved error handling and recovery
@@ -283,6 +303,7 @@ interface Claim {
 - Added search capabilities
 
 ## Known Issues
+
 - Sign-out flow requires page refresh
 - Some image previews may not load correctly
 - Sorting transitions could be smoother
@@ -291,6 +312,7 @@ interface Claim {
 ## Upcoming Tasks
 
 ### Data Synchronization & Polling
+
 - [x] Fix Neynar API client method names to match SDK v2.13.1
   - [x] Add type definitions for Neynar SDK methods
   - [x] Implement rate limiting and error handling
@@ -311,6 +333,7 @@ interface Claim {
   - [ ] View sync status and metrics
 
 ### Caching Improvements
+
 - [x] Implement in-memory caching with node-cache
   - [x] Add cache service singleton
   - [x] Set up TTL for different data types
@@ -326,6 +349,7 @@ interface Claim {
   - [ ] Cache versioning
 
 ### Database Optimization
+
 - [x] Set up MongoDB schemas and indexes
   - [x] FarcasterUser model with FID indexing
   - [x] BuildRequest model with compound indexes
@@ -341,6 +365,7 @@ interface Claim {
   - [ ] Set up slow query logging
 
 ### Monitoring & Logging
+
 - [ ] Set up structured logging
   - [ ] Add request/response logging
   - [ ] Implement error tracking
@@ -356,17 +381,20 @@ interface Claim {
 The project uses a combination of Farcaster Auth Kit and Next-Auth to provide a seamless authentication experience:
 
 1. **Farcaster Auth Kit**: Handles the initial Farcaster authentication flow
+
    - User signs in with their Farcaster account
    - Provides access to Farcaster-specific user data
    - Manages the connection to Farcaster's authentication system
 
 2. **Next-Auth Integration**: Manages session persistence
+
    - JWT-based session storage
    - 7-day session duration
    - Secure credential handling
    - Automatic token refresh
 
 3. **State Synchronization**:
+
    - Farcaster Auth Kit state is synchronized with Next-Auth
    - User data is stored in both systems
    - Seamless state recovery on page refresh

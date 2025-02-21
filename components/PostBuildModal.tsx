@@ -18,12 +18,12 @@ export function PostBuildModal({ isOpen, onClose }: PostBuildModalProps) {
     if (!text.trim()) return;
 
     // Create the Warpcast intent URL with channelKey
-    const intentUrl = new URL('https://warpcast.com/~/compose');
-    intentUrl.searchParams.set('text', text);
-    intentUrl.searchParams.set('channelKey', 'someone-build');
+    const intentUrl = new URL("https://warpcast.com/~/compose");
+    intentUrl.searchParams.set("text", text);
+    intentUrl.searchParams.set("channelKey", "someone-build");
 
     // Open Warpcast in a new tab
-    window.open(intentUrl.toString(), '_blank');
+    window.open(intentUrl.toString(), "_blank");
     onClose();
   };
 

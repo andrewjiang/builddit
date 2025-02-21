@@ -11,10 +11,12 @@ const getConfig = () => {
     domain,
     siweUri,
     // @ts-ignore - ethers version type incompatibility
-    provider: isClient ? new providers.JsonRpcProvider("https://mainnet.optimism.io", 10) : null,
+    provider: isClient
+      ? new providers.JsonRpcProvider("https://mainnet.optimism.io", 10)
+      : null,
     persist: true,
     timeoutInMs: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 };
 
-export const authConfig = getConfig(); 
+export const authConfig = getConfig();

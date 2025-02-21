@@ -51,4 +51,4 @@ services:
     instance_count: 1
     instance_size_slug: basic-xxs
     routes:
-      - path: / 
+      - path: /

@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IFarcasterUser extends Document {
   fid: number;
@@ -32,19 +32,19 @@ const FarcasterUserSchema = new Schema<IFarcasterUser>(
     },
     profile: {
       bio: {
-        text: { type: String, default: '' },
+        text: { type: String, default: "" },
         mentioned_profiles: [{ type: String }],
       },
-      location: { type: String, default: '' },
+      location: { type: String, default: "" },
     },
     followerCount: { type: Number, default: 0 },
     followingCount: { type: Number, default: 0 },
-    activeStatus: { type: String, default: 'active' },
+    activeStatus: { type: String, default: "active" },
     lastUpdated: { type: Date, default: Date.now },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Indexes
@@ -52,15 +52,19 @@ FarcasterUserSchema.index({ username: 1 });
 FarcasterUserSchema.index({ lastUpdated: 1 });
 
 // Static methods
-FarcasterUserSchema.statics.upsertUser = async function (userData: Partial<IFarcasterUser>) {
+FarcasterUserSchema.statics.upsertUser = async function (
+  userData: Partial<IFarcasterUser>,
+) {
   const { fid, ...rest } = userData;
-  if (!fid) throw new Error('FID is required for user upsert');
+  if (!fid) throw new Error("FID is required for user upsert");
 
   return this.findOneAndUpdate(
     { fid },
     { ...rest, lastUpdated: new Date() },
-    { upsert: true, new: true }
+    { upsert: true, new: true },
   );
 };
 
-export const FarcasterUser = mongoose.models.FarcasterUser || mongoose.model<IFarcasterUser>('FarcasterUser', FarcasterUserSchema); 
+export const FarcasterUser =
+  mongoose.models.FarcasterUser ||
+  mongoose.model<IFarcasterUser>("FarcasterUser", FarcasterUserSchema);

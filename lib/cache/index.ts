@@ -1,20 +1,20 @@
-import NodeCache from 'node-cache';
-import { IBuildRequest } from '@/lib/db/models/BuildRequest';
-import { TimeRange } from '@/lib/db/models/EngagementScore';
+import NodeCache from "node-cache";
+import { IBuildRequest } from "@/lib/db/models/BuildRequest";
+import { TimeRange } from "@/lib/db/models/EngagementScore";
 
 export class CacheService {
   private static instance: CacheService;
   private cache: NodeCache;
-  private readonly CAST_PREFIX = 'cast';
-  private readonly FARCASTER_USER_PREFIX = 'farcaster_user';
-  private readonly ENGAGEMENT_PREFIX = 'engagement';
+  private readonly CAST_PREFIX = "cast";
+  private readonly FARCASTER_USER_PREFIX = "farcaster_user";
+  private readonly ENGAGEMENT_PREFIX = "engagement";
   private readonly TTL = 5 * 60 * 1000; // 5 minutes
 
   // Cache keys
-  private readonly LATEST_BUILDS_KEY = 'latest_builds';
-  private readonly TOP_BUILDS_PREFIX = 'top_builds';
-  private readonly BUILD_REQUEST_PREFIX = 'build';
-  private readonly USER_PREFIX = 'user';
+  private readonly LATEST_BUILDS_KEY = "latest_builds";
+  private readonly TOP_BUILDS_PREFIX = "top_builds";
+  private readonly BUILD_REQUEST_PREFIX = "build";
+  private readonly USER_PREFIX = "user";
 
   private constructor() {
     this.cache = new NodeCache({
@@ -44,7 +44,10 @@ export class CacheService {
     return `${this.TOP_BUILDS_PREFIX}_${timeRange}`;
   }
 
-  public setTopBuildRequests(timeRange: TimeRange, buildRequests: IBuildRequest[]) {
+  public setTopBuildRequests(
+    timeRange: TimeRange,
+    buildRequests: IBuildRequest[],
+  ) {
     const ttl = {
       day: 15 * 60, // 15 minutes
       week: 30 * 60, // 30 minutes
@@ -52,14 +55,12 @@ export class CacheService {
       all: 2 * 60 * 60, // 2 hours
     }[timeRange];
 
-    return this.cache.set(
-      this.getTopBuildsKey(timeRange),
-      buildRequests,
-      ttl
-    );
+    return this.cache.set(this.getTopBuildsKey(timeRange), buildRequests, ttl);
   }
 
-  public getTopBuildRequests(timeRange: TimeRange): IBuildRequest[] | undefined {
+  public getTopBuildRequests(
+    timeRange: TimeRange,
+  ): IBuildRequest[] | undefined {
     return this.cache.get<IBuildRequest[]>(this.getTopBuildsKey(timeRange));
   }
 
@@ -72,7 +73,7 @@ export class CacheService {
     return this.cache.set(
       this.getBuildRequestKey(hash),
       buildRequest,
-      30 * 60 // 30 minutes TTL
+      30 * 60, // 30 minutes TTL
     );
   }
 
@@ -86,11 +87,7 @@ export class CacheService {
   }
 
   public setFarcasterUser(fid: number, user: any) {
-    this.cache.set(
-      this.getFarcasterUserKey(fid),
-      user,
-      this.TTL
-    );
+    this.cache.set(this.getFarcasterUserKey(fid), user, this.TTL);
   }
 
   public getFarcasterUser(fid: number): any | undefined {
@@ -111,4 +108,4 @@ export class CacheService {
   }
 }
 
-export const cacheService = CacheService.getInstance(); 
+export const cacheService = CacheService.getInstance();
