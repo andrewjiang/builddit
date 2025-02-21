@@ -1,10 +1,5 @@
 import { NeynarAPIClient as BaseNeynarAPIClient } from "@neynar/nodejs-sdk";
 import { BuildRequestSchema } from "./types";
-import { config } from "dotenv";
-import { resolve } from "path";
-
-// Load environment variables
-config({ path: resolve(process.cwd(), ".env") });
 
 interface NeynarCast {
   hash: string;
