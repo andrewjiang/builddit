@@ -9,9 +9,15 @@ services:
     git:
       branch: main
       repo_clone_url: https://github.com/andrewjiang/builddit.git
-    build_command: npm run build
+    build_command: npm install --include=dev && npm run build
     run_command: npm start
     envs:
+      - key: NODE_ENV
+        scope: BUILD_TIME
+        value: "production"
+      - key: NODE_ENV
+        scope: RUN_TIME
+        value: "production"
       - key: MONGODB_URI
         scope: BUILD_TIME
         type: SECRET
