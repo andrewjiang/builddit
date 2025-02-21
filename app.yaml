@@ -1,0 +1,54 @@
+name: builddit
+region: sfo
+domains:
+  - domain: buildd.it
+    type: PRIMARY
+    zone: buildd.it
+services:
+  - name: builddit-web
+    git:
+      branch: main
+      repo_clone_url: https://github.com/andrewjiang/builddit.git
+    build_command: npm run build
+    run_command: npm start
+    envs:
+      - key: MONGODB_URI
+        scope: RUN_TIME
+        type: SECRET
+        value: ${MONGODB_URI}
+      - key: NEYNAR_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: ${NEYNAR_API_KEY}
+      - key: NEYNAR_CLIENT_ID
+        scope: RUN_TIME
+        type: SECRET
+        value: ${NEYNAR_CLIENT_ID}
+      - key: NEYNAR_CHANNEL_ID
+        scope: RUN_TIME
+        type: SECRET
+        value: ${NEYNAR_CHANNEL_ID}
+      - key: NEXTAUTH_URL
+        scope: RUN_TIME
+        value: "https://buildd.it"
+      - key: NEXTAUTH_SECRET
+        scope: RUN_TIME
+        type: SECRET
+        value: ${NEXTAUTH_SECRET}
+      - key: NEXT_PUBLIC_RELAY_URL
+        scope: RUN_TIME
+        value: "https://relay.farcaster.xyz"
+      - key: NEXT_PUBLIC_RPC_URL
+        scope: RUN_TIME
+        value: "https://mainnet.optimism.io"
+      - key: NEXT_PUBLIC_DOMAIN
+        scope: RUN_TIME
+        value: "buildd.it"
+      - key: NEXT_PUBLIC_SIWE_URI
+        scope: RUN_TIME
+        value: "https://buildd.it/login"
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: / 
