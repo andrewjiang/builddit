@@ -91,6 +91,28 @@ function EmbeddedCastCard({
   );
 }
 
+function isImageUrl(url: string): boolean {
+  // Check for common image extensions
+  if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) return true;
+  
+  // Check for common image hosting domains
+  if (url.includes('imagedelivery.net')) return true;
+  if (url.includes('openseauserdata.com')) return true;
+  if (url.includes('i.imgur.com')) return true;
+  if (url.includes('cdn.discordapp.com')) return true;
+  
+  // Google Docs image URLs
+  if (url.includes('googleusercontent.com/docs')) return true;
+  
+  // Firefly media URLs
+  if (url.includes('media.firefly.land/farcaster')) return true;
+  
+  // Empire Builder OG image URLs
+  if (url.includes('empirebuilder.world/api/og')) return true;
+  
+  return false;
+}
+
 export function BuildRequestDetails({
   buildRequest,
   claims,
@@ -158,23 +180,50 @@ export function BuildRequestDetails({
                   {embed.cast ? (
                     <EmbeddedCastCard cast={embed.cast} />
                   ) : embed.url ? (
-                    <a
-                      href={embed.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block bg-purple-900/50 rounded-lg p-4 hover:bg-purple-900/70 border border-purple-600/30 transition-colors"
-                    >
-                      {embed.metadata?.html?.ogTitle && (
-                        <h3 className="font-semibold text-purple-100">
-                          {embed.metadata.html.ogTitle}
-                        </h3>
+                    <div className="mt-2 overflow-hidden">
+                      {(isImageUrl(embed.url) || embed.metadata?.html?.ogImage?.[0]?.url) ? (
+                        <div className="relative w-full rounded-lg overflow-hidden bg-purple-800/50">
+                          <div className="relative aspect-[16/9]">
+                            <SafeImage
+                              src={isImageUrl(embed.url) ? embed.url : (embed.metadata?.html?.ogImage?.[0]?.url || embed.url)}
+                              alt={embed.metadata?.html?.ogTitle || "Embedded image"}
+                              className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                            />
+                          </div>
+                          {embed.metadata?.html?.ogTitle && (
+                            <div className="p-2.5">
+                              <h3 className="text-purple-200 font-medium break-words text-sm">
+                                {embed.metadata.html.ogTitle}
+                              </h3>
+                              {embed.metadata.html.ogDescription && (
+                                <p className="text-xs text-purple-300 mt-1 break-words line-clamp-2">
+                                  {embed.metadata.html.ogDescription}
+                                </p>
+                              )}
+                              <Link
+                                href={embed.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-purple-400 hover:text-purple-300 block mt-1.5 break-all"
+                              >
+                                {embed.url}
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="bg-purple-800/30 rounded-lg p-3 border border-purple-700/50">
+                          <Link
+                            href={embed.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-purple-300 hover:text-purple-200 transition-colors break-all block"
+                          >
+                            {embed.url}
+                          </Link>
+                        </div>
                       )}
-                      {embed.metadata?.html?.ogDescription && (
-                        <p className="text-purple-300 mt-1">
-                          {embed.metadata.html.ogDescription}
-                        </p>
-                      )}
-                    </a>
+                    </div>
                   ) : null}
                 </div>
               ))}

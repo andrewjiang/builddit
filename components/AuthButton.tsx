@@ -22,6 +22,10 @@ interface ProfileState {
   signOut?: () => void;
 }
 
+interface AuthButtonProps {
+  className?: string;
+}
+
 interface StoredUser {
   fid: number;
   username: string;
@@ -50,7 +54,7 @@ const LoadingButton = () => (
   </div>
 );
 
-export function AuthButton() {
+export function AuthButton({ className = "" }: AuthButtonProps) {
   const { data: session } = useSession();
   const {
     isAuthenticated,
@@ -152,18 +156,18 @@ export function AuthButton() {
   const username = storedUser?.username || session?.user?.username || "Profile";
 
   return (
-    <div className="relative">
+    <div className={`relative ${className}`}>
       {isLoggedIn ? (
-        <Menu as="div" className="relative inline-block text-left">
+        <Menu as="div" className="relative inline-block text-left w-full">
           <Menu.Button
             className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
-                                 bg-gradient-to-r from-yellow-400 to-yellow-300 p-[2px] font-medium text-purple-900 
-                                 shadow-xl shadow-yellow-400/20 transition-all duration-300 hover:shadow-yellow-400/40"
+                                 bg-[#7c65c1] font-medium text-white 
+                                 shadow-xl shadow-[#7c65c1]/20 transition-all duration-300 hover:shadow-[#7c65c1]/40 w-full"
           >
             <span
-              className="relative flex items-center space-x-2 rounded-lg bg-gradient-to-r from-yellow-400 
-                                     to-yellow-300 px-4 py-3 transition-all duration-200 ease-out group-hover:bg-opacity-0 
-                                     group-hover:from-yellow-300 group-hover:to-yellow-200"
+              className="relative flex items-center space-x-2 rounded-lg bg-[#7c65c1]
+                                     transition-all duration-200 ease-out group-hover:bg-[#8d77d1]
+                                     w-full justify-center px-4 py-3.5"
             >
               <img
                 src={getProfileImage()}
@@ -206,13 +210,13 @@ export function AuthButton() {
       ) : (
         <div
           className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
-                             bg-gradient-to-r from-yellow-400 to-yellow-300 font-medium text-purple-900 
-                             shadow-xl shadow-yellow-400/20 transition-all duration-300 hover:shadow-yellow-400/40"
+                             bg-[#7c65c1] font-medium text-white 
+                             shadow-xl shadow-[#7c65c1]/20 transition-all duration-300 hover:shadow-[#7c65c1]/40 w-full"
         >
           <div
-            className="relative flex items-center space-x-2 rounded-lg bg-gradient-to-r from-yellow-400 
-                                 to-yellow-300 transition-all duration-200 ease-out group-hover:bg-opacity-0 
-                                 group-hover:from-yellow-300 group-hover:to-yellow-200"
+            className="relative flex items-center space-x-2 rounded-lg bg-[#7c65c1]
+                                 transition-all duration-200 ease-out group-hover:bg-[#8d77d1]
+                                 w-full justify-center"
           >
             <SignInButton />
           </div>

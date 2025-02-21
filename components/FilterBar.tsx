@@ -38,6 +38,7 @@ export function FilterBar({
     { id: "frame", label: "Frame" },
     { id: "game", label: "Game" },
     { id: "base", label: "Base" },
+    { id: "meme", label: "Meme" },
   ];
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {

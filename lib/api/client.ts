@@ -56,7 +56,7 @@ export async function fetchBuildRequests(
 
     return {
       buildRequests,
-      next: data.next,
+      next: data.next?.cursor || data.next,
     };
   } catch (error) {
     console.error("Error fetching build requests:", error);

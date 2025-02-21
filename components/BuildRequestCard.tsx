@@ -67,33 +67,48 @@ function EmbeddedCastCard({
             )}
             {embed.url && (
               <div className="mt-2 overflow-hidden">
-                {embed.metadata?.html?.ogImage?.[0]?.url ? (
-                  <SafeImage
-                    src={embed.metadata.html.ogImage[0].url}
-                    alt={embed.metadata.html.ogTitle || "Embedded image"}
-                    className="w-full max-h-[400px] rounded-lg"
-                  />
-                ) : (
-                  <Link
-                    href={embed.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-purple-400 hover:text-purple-300 block mt-2 break-all"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {embed.url}
-                  </Link>
-                )}
-                {embed.metadata?.html?.ogTitle && (
-                  <div className="mt-2 overflow-hidden">
-                    <h3 className="text-purple-200 font-medium break-words">
-                      {embed.metadata.html.ogTitle}
-                    </h3>
-                    {embed.metadata.html.ogDescription && (
-                      <p className="text-sm text-purple-300 mt-1 break-words line-clamp-2">
-                        {embed.metadata.html.ogDescription}
-                      </p>
+                {isImageUrl(embed.url) || embed.metadata?.html?.ogImage?.[0]?.url ? (
+                  <div className="relative w-full max-w-[480px] rounded-lg overflow-hidden bg-purple-800/50">
+                    <div className="relative aspect-[16/9] max-h-[320px]">
+                      <SafeImage
+                        src={isImageUrl(embed.url) ? embed.url : embed.metadata?.html?.ogImage?.[0]?.url}
+                        alt={embed.metadata?.html?.ogTitle || "Embedded image"}
+                        className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                      />
+                    </div>
+                    {embed.metadata?.html?.ogTitle && (
+                      <div className="p-2.5">
+                        <h3 className="text-purple-200 font-medium break-words text-sm">
+                          {embed.metadata.html.ogTitle}
+                        </h3>
+                        {embed.metadata.html.ogDescription && (
+                          <p className="text-xs text-purple-300 mt-1 break-words line-clamp-2">
+                            {embed.metadata.html.ogDescription}
+                          </p>
+                        )}
+                        <Link
+                          href={embed.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-purple-400 hover:text-purple-300 block mt-1.5 break-all"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {embed.url}
+                        </Link>
+                      </div>
                     )}
+                  </div>
+                ) : (
+                  <div className="bg-purple-800/30 rounded-lg p-3 border border-purple-700/50">
+                    <Link
+                      href={embed.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-purple-300 hover:text-purple-200 transition-colors break-all block"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {embed.url}
+                    </Link>
                   </div>
                 )}
               </div>
@@ -103,6 +118,28 @@ function EmbeddedCastCard({
       </div>
     </div>
   );
+}
+
+function isImageUrl(url: string): boolean {
+  // Check for common image extensions
+  if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) return true;
+  
+  // Check for common image hosting domains
+  if (url.includes('imagedelivery.net')) return true;
+  if (url.includes('openseauserdata.com')) return true;
+  if (url.includes('i.imgur.com')) return true;
+  if (url.includes('cdn.discordapp.com')) return true;
+  
+  // Google Docs image URLs
+  if (url.includes('googleusercontent.com/docs')) return true;
+  
+  // Firefly media URLs
+  if (url.includes('media.firefly.land/farcaster')) return true;
+  
+  // Empire Builder OG image URLs
+  if (url.includes('empirebuilder.world/api/og')) return true;
+  
+  return false;
 }
 
 export function BuildRequestCard({ buildRequest }: BuildRequestCardProps) {
@@ -262,27 +299,52 @@ export function BuildRequestCard({ buildRequest }: BuildRequestCardProps) {
                   {embed.cast ? (
                     <EmbeddedCastCard cast={embed.cast} />
                   ) : embed.url ? (
-                    <a
-                      href={embed.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block bg-purple-900/50 rounded-lg p-3 hover:bg-purple-900/70 transition-colors border border-purple-600/30 overflow-hidden"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {embed.metadata?.html?.ogTitle && (
-                        <h4 className="font-medium text-purple-100 break-words">
-                          {embed.metadata.html.ogTitle}
-                        </h4>
+                    <div className="mt-2 overflow-hidden">
+                      {(embed.metadata?.html?.ogImage?.[0]?.url || isImageUrl(embed.url)) ? (
+                        <div className="relative w-full max-w-[480px] rounded-lg overflow-hidden bg-purple-800/50">
+                          <div className="relative aspect-[16/9] max-h-[320px]">
+                            <SafeImage
+                              src={embed.metadata?.html?.ogImage?.[0]?.url || embed.url}
+                              alt={embed.metadata?.html?.ogTitle || "Embedded image"}
+                              className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                            />
+                          </div>
+                          {embed.metadata?.html?.ogTitle && (
+                            <div className="p-2.5">
+                              <h3 className="text-purple-200 font-medium break-words text-sm">
+                                {embed.metadata.html.ogTitle}
+                              </h3>
+                              {embed.metadata.html.ogDescription && (
+                                <p className="text-xs text-purple-300 mt-1 break-words line-clamp-2">
+                                  {embed.metadata.html.ogDescription}
+                                </p>
+                              )}
+                              <Link
+                                href={embed.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-purple-400 hover:text-purple-300 block mt-1.5 break-all"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {embed.url}
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="bg-purple-800/30 rounded-lg p-3 border border-purple-700/50">
+                          <Link
+                            href={embed.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-purple-300 hover:text-purple-200 transition-colors break-all block"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {embed.url}
+                          </Link>
+                        </div>
                       )}
-                      {embed.metadata?.html?.ogDescription && (
-                        <p className="text-purple-300 text-sm mt-1 break-words line-clamp-2">
-                          {embed.metadata.html.ogDescription}
-                        </p>
-                      )}
-                      <div className="mt-2 text-purple-400 text-sm break-all overflow-hidden text-ellipsis">
-                        {embed.url}
-                      </div>
-                    </a>
+                    </div>
                   ) : null}
                 </div>
               ))}
@@ -340,10 +402,7 @@ export function BuildRequestCard({ buildRequest }: BuildRequestCardProps) {
                 {likes}
               </span>
             </button>
-            <span
-              className="hidden md:inline text-purple-600"
-              data-oid="qmdtok:"
-            >
+            <span className="text-purple-600" data-oid="qmdtok:">
               •
             </span>
             <button
@@ -373,43 +432,74 @@ export function BuildRequestCard({ buildRequest }: BuildRequestCardProps) {
             </button>
           </div>
         </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleBuildClick();
-          }}
-          className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
-                             bg-gradient-to-r from-emerald-400 to-emerald-300 p-[1.5px] font-medium text-emerald-900 
-                             shadow-xl shadow-emerald-400/20 transition-all duration-300 hover:shadow-emerald-400/40
-                             hover:scale-[1.02] active:scale-[0.98]"
-          data-oid="bxp4bi4"
-        >
-          <span
-            className="relative flex items-center space-x-1.5 rounded-lg bg-gradient-to-r from-emerald-400 
-                                   to-emerald-300 px-2 py-1.5 text-sm transition-all duration-200 ease-out group-hover:bg-opacity-0 
-                                   group-hover:from-emerald-300 group-hover:to-emerald-200"
-            data-oid="4ox26cb"
-          >
-            <svg
-              className="w-3.5 h-3.5 transform transition-transform duration-200 group-hover:translate-x-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              data-oid="_l3tg5k"
+        <div className="flex items-center space-x-2">
+          <div className="group/claims relative hidden md:flex items-center">
+            <button
+              className="relative flex items-center space-x-1.5 rounded-lg bg-purple-700/50 
+                        px-2 py-1.5 text-sm text-purple-200 border border-purple-600/30
+                        hover:bg-purple-700/70 transition-all duration-200"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M14 5l7 7m0 0l-7 7m7-7H3"
-                data-oid="hb-0pvl"
-              />
-            </svg>
-            <span className="font-medium" data-oid="qktudy9">
-              I Built This!
+              <svg
+                className="w-3.5 h-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>{(buildRequest as any).claimsCount || 0} Built</span>
+            </button>
+            {/* Tooltip */}
+            <div className="absolute bottom-full right-0 mb-1 hidden group-hover/claims:block">
+              <div className="bg-purple-900/90 backdrop-blur-sm text-purple-100 text-xs px-2 py-1 rounded-md whitespace-nowrap
+                            border border-purple-400/20 shadow-xl">
+                Number of people who built this
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleBuildClick();
+            }}
+            className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
+                               bg-gradient-to-r from-emerald-400 to-emerald-300 p-[1.5px] font-medium text-emerald-900 
+                               shadow-xl shadow-emerald-400/20 transition-all duration-300 hover:shadow-emerald-400/40
+                               hover:scale-[1.02] active:scale-[0.98]"
+            data-oid="bxp4bi4"
+          >
+            <span
+              className="relative flex items-center space-x-1.5 rounded-lg bg-gradient-to-r from-emerald-400 
+                                     to-emerald-300 px-2 py-1.5 text-sm transition-all duration-200 ease-out group-hover:bg-opacity-0 
+                                     group-hover:from-emerald-300 group-hover:to-emerald-200"
+              data-oid="4ox26cb"
+            >
+              <svg
+                className="w-3.5 h-3.5 transform transition-transform duration-200 group-hover:translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                data-oid="_l3tg5k"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  data-oid="hb-0pvl"
+                />
+              </svg>
+              <span className="font-medium" data-oid="qktudy9">
+                I Built This!
+              </span>
             </span>
-          </span>
-        </button>
+          </button>
+        </div>
       </div>
 
       {/* Auth Modal */}

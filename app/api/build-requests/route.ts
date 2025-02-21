@@ -249,12 +249,16 @@ export async function GET(request: Request) {
       });
     }
 
-    // Apply limit
-    buildRequests = buildRequests.slice(0, limit);
+    // Apply limit and set next cursor
+    if (buildRequests.length > limit) {
+      const lastItem = buildRequests[limit - 1];
+      nextCursor = lastItem.publishedAt.toISOString();
+      buildRequests = buildRequests.slice(0, limit);
+    }
 
     return NextResponse.json({
       buildRequests,
-      next: response.next?.cursor,
+      next: nextCursor ? { cursor: nextCursor } : response.next,
     });
   } catch (error) {
     console.error("Error fetching build requests:", error);

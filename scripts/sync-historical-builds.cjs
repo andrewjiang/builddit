@@ -42,6 +42,7 @@ const BuildRequestSchema = new mongoose.Schema(
       replies: { type: Number, default: 0 },
       watches: { type: Number, default: 0 },
     },
+    claimsCount: { type: Number, default: 0 },
     parentHash: { type: String },
     mentions: [{ type: String }],
     embeds: [
@@ -143,25 +144,50 @@ const FarcasterUser =
 class NeynarClient {
   constructor(apiKey) {
     this.apiKey = apiKey;
+    this.maxRetries = 5;
+    this.baseDelay = 5000; // Start with 5 seconds
+  }
+
+  async fetchWithRetry(url, retryCount = 0) {
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+          "X-API-Key": this.apiKey,
+        },
+      });
+
+      if (response.ok) {
+        return response.json();
+      }
+
+      if (response.status === 503 && retryCount < this.maxRetries) {
+        const delay = this.baseDelay * Math.pow(2, retryCount); // Exponential backoff
+        console.log(`\nReceived 503 error (attempt ${retryCount + 1}/${this.maxRetries})`);
+        console.log(`Waiting ${delay/1000} seconds before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.fetchWithRetry(url, retryCount + 1);
+      }
+
+      throw new Error(`Neynar API responded with status: ${response.status}`);
+    } catch (error) {
+      if (retryCount < this.maxRetries) {
+        const delay = this.baseDelay * Math.pow(2, retryCount);
+        console.log(`\nNetwork error (attempt ${retryCount + 1}/${this.maxRetries}):`, error.message);
+        console.log(`Waiting ${delay/1000} seconds before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.fetchWithRetry(url, retryCount + 1);
+      }
+      throw error;
+    }
   }
 
   async fetchBuildRequests(cursor, limit = 100) {
-    const url = `https://api.neynar.com/v2/farcaster/feed/channels?channel_ids=someone-build&with_recasts=true&with_replies=true&members_only=true&limit=${limit}${cursor ? `&cursor=${cursor}` : ""}`;
+    const url = `https://api.neynar.com/v2/farcaster/feed/channels?channel_ids=someone-build&with_recasts=true&with_replies=true&members_only=false&limit=${limit}${cursor ? `&cursor=${cursor}` : ""}`;
 
     console.log("Fetching URL:", url);
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        "X-API-Key": this.apiKey,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Neynar API responded with status: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = await this.fetchWithRetry(url);
 
     // Log the full structure of the first cast to debug replies and recasts
     if (data.casts && data.casts[0]) {
@@ -179,10 +205,7 @@ class NeynarClient {
       });
     }
 
-    return {
-      casts: data.casts,
-      next: data.next,
-    };
+    return data;
   }
 }
 
@@ -322,10 +345,13 @@ async function syncCasts(cursor, limit = 50) {
 
       // Process replies
       const replies = cast.replies?.result || [];
+      let taggedClaimsCount = 0;
+
       if (replies.length > 0) {
         const taggedReplies = replies.filter((reply) =>
           isTaggedBuild(reply.text),
         );
+        taggedClaimsCount += taggedReplies.length;
         console.log("\nProcessing Replies:", {
           total: replies.length,
           tagged: taggedReplies.length,
@@ -375,6 +401,7 @@ async function syncCasts(cursor, limit = 50) {
         const taggedQuotes = recasts.filter(
           (recast) => recast.cast && isTaggedBuild(recast.cast.text),
         );
+        taggedClaimsCount += taggedQuotes.length;
         console.log("\nProcessing Recasts:", {
           total: recasts.length,
           tagged: taggedQuotes.length,
@@ -426,6 +453,12 @@ async function syncCasts(cursor, limit = 50) {
         if (isTaggedBuild(recast.cast.text)) totalTaggedClaims++;
       }
 
+      // Update the build request with the claims count
+      await BuildRequest.findOneAndUpdate(
+        { hash: cast.hash },
+        { $set: { claimsCount: taggedClaimsCount } }
+      );
+
       processedCasts.push(buildRequest);
     } catch (error) {
       console.error("\nError processing cast:", error);
@@ -460,6 +493,64 @@ async function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function migrateClaimsCounts() {
+  console.log("\n=== Migrating Claims Counts ===");
+  
+  // Get total count first
+  const totalBuildRequests = await BuildRequest.countDocuments();
+  console.log(`Found ${totalBuildRequests} build requests to process`);
+  
+  const BATCH_SIZE = 50;
+  let processed = 0;
+  let updated = 0;
+  let startTime = Date.now();
+
+  // Process in batches
+  for (let skip = 0; skip < totalBuildRequests; skip += BATCH_SIZE) {
+    const buildRequests = await BuildRequest.find({})
+      .skip(skip)
+      .limit(BATCH_SIZE)
+      .select('hash claimsCount');
+
+    for (const buildRequest of buildRequests) {
+      // Count tagged claims for this build request
+      const claimsCount = await BuildClaim.countDocuments({
+        buildRequestHash: buildRequest.hash,
+        isTagged: true
+      });
+      
+      // Update the build request if count is different
+      if (buildRequest.claimsCount !== claimsCount) {
+        await BuildRequest.updateOne(
+          { hash: buildRequest.hash },
+          { $set: { claimsCount } }
+        );
+        updated++;
+      }
+      processed++;
+
+      // Log progress every 10 items
+      if (processed % 10 === 0) {
+        const elapsedSeconds = (Date.now() - startTime) / 1000;
+        const itemsPerSecond = processed / elapsedSeconds;
+        const remainingItems = totalBuildRequests - processed;
+        const estimatedSecondsLeft = remainingItems / itemsPerSecond;
+        
+        console.log(`Progress: ${processed}/${totalBuildRequests} (${Math.round(processed/totalBuildRequests*100)}%)`);
+        console.log(`Updated: ${updated} records`);
+        console.log(`Speed: ${itemsPerSecond.toFixed(2)} items/sec`);
+        console.log(`Estimated time remaining: ${Math.round(estimatedSecondsLeft)} seconds\n`);
+      }
+    }
+  }
+  
+  const totalTimeSeconds = (Date.now() - startTime) / 1000;
+  console.log(`\nMigration Complete!`);
+  console.log(`Processed ${processed} build requests in ${totalTimeSeconds.toFixed(1)} seconds`);
+  console.log(`Updated ${updated} records with new claims counts`);
+  console.log("=== Migration Complete ===\n");
+}
+
 async function syncHistoricalBuilds() {
   try {
     console.log("\n=== Starting Historical Build Sync ===");
@@ -470,6 +561,9 @@ async function syncHistoricalBuilds() {
     console.log("\nConnecting to MongoDB...");
     await mongoose.connect(MONGODB_URI);
     console.log("Connected to MongoDB successfully");
+
+    // Run the migration after connecting to MongoDB
+    await migrateClaimsCounts();
 
     // Get current state
     const existingCount = await BuildRequest.countDocuments();

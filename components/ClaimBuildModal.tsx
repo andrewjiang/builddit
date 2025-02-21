@@ -237,7 +237,7 @@ export function ClaimBuildModal({
                           Project URL
                         </label>
                         <input
-                          type="url"
+                          type="text"
                           id="projectUrl"
                           value={projectUrl}
                           onChange={handleUrlChange}

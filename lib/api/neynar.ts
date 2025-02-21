@@ -58,6 +58,7 @@ class NeynarClient {
   public static getInstance(): NeynarClient {
     if (!NeynarClient.instance) {
       NeynarClient.instance = new NeynarClient();
+      NeynarClient.instance.initialize();
     }
     return NeynarClient.instance;
   }
@@ -88,7 +89,7 @@ class NeynarClient {
         channelIds: [this.channelId],
         withRecasts: true,
         withReplies: true,
-        membersOnly: true,
+        membersOnly: false,
         limit,
         cursor,
       });
@@ -101,19 +102,18 @@ class NeynarClient {
   }
 
   public async fetchUserProfile(fid: number) {
-    return this.rateLimitedRequest(async () => {
-      if (!this.client) throw new Error("Client not initialized");
-
-      try {
-        const response = await this.client.fetchBulkUsers({
+    try {
+      if (!this.client) this.initialize();
+      const response = await this.rateLimitedRequest(() =>
+        this.client!.fetchBulkUsers({
           fids: [fid],
-        });
-        return response.users[0];
-      } catch (error) {
-        console.error(`Error fetching user profile for FID ${fid}:`, error);
-        throw error;
-      }
-    });
+        })
+      );
+      return response.users[0];
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      throw error;
+    }
   }
 
   public async fetchCastEngagement(hash: string) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AuthButton } from "@/components/AuthButton";
 import { BuildRequestCard } from "@/components/BuildRequestCard";
 import { FilterBar, SortOption } from "@/components/FilterBar";
@@ -12,6 +12,11 @@ interface BuildRequestsContentProps {
   initialBuildRequests: BuildRequest[];
 }
 
+interface PaginationResponse {
+  buildRequests: BuildRequest[];
+  next?: string;
+}
+
 export function BuildRequestsContent({
   initialBuildRequests,
 }: BuildRequestsContentProps) {
@@ -20,10 +25,13 @@ export function BuildRequestsContent({
     useState<BuildRequest[]>(initialBuildRequests);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentSort, setCurrentSort] = useState<SortOption>("top_week");
+  const [currentSort, setCurrentSort] = useState<SortOption>("top_day");
   const [searchQuery, setSearchQuery] = useState("");
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -37,33 +45,42 @@ export function BuildRequestsContent({
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  const fetchData = async (isPolling = false) => {
+  const fetchData = async (isPolling = false, loadMore = false) => {
     try {
-      setIsLoading(!isPolling); // Only show loading state for manual fetches
-      const response = await fetchBuildRequests({
+      if (!loadMore) {
+        setIsLoading(!isPolling);
+      }
+      const response: PaginationResponse = await fetchBuildRequests({
         sort: currentSort,
         search: searchQuery,
+        cursor: loadMore ? cursor : undefined,
       });
 
       if (!response.buildRequests) return;
 
       if (isPolling) {
-        // Silently merge new posts with existing ones
+        // Only merge new posts at the top
         setBuildRequests((prevRequests) => {
-          const merged = [...response.buildRequests, ...prevRequests];
-          // Remove duplicates while preserving order
-          const uniquePosts = merged.filter(
-            (post, index, self) =>
-              index === self.findIndex((p) => p.hash === post.hash),
+          const newPosts = response.buildRequests.filter(
+            (post) => !prevRequests.some((p) => p.hash === post.hash)
           );
-          // Sort by timestamp
-          return uniquePosts.sort(
-            (a, b) =>
-              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-          );
+          return [...newPosts, ...prevRequests];
         });
+      } else if (loadMore) {
+        // For infinite scroll, append new unique posts
+        setBuildRequests((prev) => {
+          const uniquePosts = response.buildRequests.filter(
+            (post) => !prev.some((p) => p.hash === post.hash)
+          );
+          return [...prev, ...uniquePosts];
+        });
+        setCursor(response.next);
+        setHasMore(!!response.next);
       } else {
+        // Initial load
         setBuildRequests(response.buildRequests);
+        setCursor(response.next);
+        setHasMore(!!response.next);
       }
       setError(null);
     } catch (err) {
@@ -75,10 +92,16 @@ export function BuildRequestsContent({
       if (!isPolling) {
         setIsLoading(false);
       }
+      setIsLoadingMore(false);
     }
   };
 
   useEffect(() => {
+    // Reset state when sort or search changes
+    setBuildRequests([]);
+    setCursor(undefined);
+    setHasMore(true);
+    
     // Always fetch when sort or search changes
     fetchData();
 
@@ -110,6 +133,41 @@ export function BuildRequestsContent({
   const handleSearch = (query: string) => {
     setSearchQuery(query);
   };
+
+  // Infinite scroll handler
+  const loadMore = async () => {
+    if (isLoadingMore || !hasMore || isLoading) return;
+    setIsLoadingMore(true);
+    await fetchData(false, true);
+  };
+
+  // Intersection Observer for infinite scroll
+  const observerTarget = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!node || !hasMore || isLoading || isLoadingMore) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          // Only trigger if we're scrolling up from below
+          if (entries[0].isIntersecting && hasMore && !isLoading && !isLoadingMore) {
+            loadMore();
+          }
+        },
+        { 
+          threshold: 0,
+          // Add a 200px margin to trigger loading before reaching the very bottom
+          rootMargin: '200px 0px'
+        }
+      );
+
+      observer.observe(node);
+
+      return () => {
+        observer.disconnect();
+      };
+    },
+    [hasMore, isLoading, isLoadingMore, loadMore]
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-900 via-purple-800 to-purple-700 relative">
@@ -265,8 +323,8 @@ export function BuildRequestsContent({
                     <span>New Request</span>
                   </span>
                 </button>
-                <div className="flex-shrink-0">
-                  <AuthButton />
+                <div className="w-full">
+                  <AuthButton className="w-full" />
                 </div>
               </div>
             </div>
@@ -285,7 +343,7 @@ export function BuildRequestsContent({
 
         {/* Posts List */}
         <div className="space-y-6">
-          {isLoading ? (
+          {isLoading && !buildRequests.length ? (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-300 border-t-transparent"></div>
               <p className="mt-2 text-purple-300">Loading build requests...</p>
@@ -305,9 +363,19 @@ export function BuildRequestsContent({
               <p className="text-purple-300">No build requests found</p>
             </div>
           ) : (
-            buildRequests.map((request) => (
-              <BuildRequestCard key={request.hash} buildRequest={request} />
-            ))
+            <>
+              {buildRequests.map((request) => (
+                <BuildRequestCard key={request.hash} buildRequest={request} />
+              ))}
+              {/* Loading more indicator */}
+              <div ref={hasMore ? observerTarget : null} className="h-4">
+                {isLoadingMore && (
+                  <div className="text-center py-4">
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-3 border-purple-300 border-t-transparent"></div>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </div>
       </main>

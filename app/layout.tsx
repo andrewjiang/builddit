@@ -7,9 +7,32 @@ import type { Metadata } from "next";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Someone Build",
-  description:
-    "A platform for discovering and claiming Farcaster build requests",
+  title: "SomeoneBuild.Fun",
+  description: "Explore and fulfill requests in /someone-build",
+  metadataBase: new URL("https://someonebuild.fun"),
+  openGraph: {
+    title: "SomeoneBuild.Fun",
+    description: "Explore and fulfill requests in /someone-build",
+    url: "https://someonebuild.fun",
+    siteName: "SomeoneBuild.Fun",
+    images: [
+      {
+        url: "/images/original.jpg",
+        width: 1200,
+        height: 630,
+        alt: "SomeoneBuild.Fun",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SomeoneBuild.Fun",
+    description: "Explore and fulfill requests in /someone-build",
+    images: ["/images/original.jpg"],
+    creator: "@ok",
+  },
   icons: {
     icon: [
       { url: "/favicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },

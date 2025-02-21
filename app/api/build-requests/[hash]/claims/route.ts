@@ -76,6 +76,12 @@ export async function POST(
       lastUpdated: new Date(),
     });
 
+    // Increment the claimsCount on the build request
+    await BuildRequest.findOneAndUpdate(
+      { hash: params.hash },
+      { $inc: { claimsCount: 1 } }
+    );
+
     return NextResponse.json({ claim });
   } catch (error) {
     console.error("Error creating claim:", error);

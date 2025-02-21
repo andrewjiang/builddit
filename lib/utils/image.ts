@@ -3,6 +3,11 @@ const WHITELISTED_DOMAINS = [
   "i.imgur.com",
   ".cloudfront.net",
   ".amazonaws.com",
+  "openseauserdata.com",
+  ".googleusercontent.com",
+  "docs.google.com",
+  "media.firefly.land",
+  "empirebuilder.world"
 ];
 
 export function isWhitelistedImageDomain(url: string): boolean {
@@ -13,7 +18,7 @@ export function isWhitelistedImageDomain(url: string): boolean {
         // Handle wildcard subdomains
         return parsedUrl.hostname.endsWith(domain);
       }
-      return parsedUrl.hostname === domain;
+      return parsedUrl.hostname === domain || parsedUrl.hostname.endsWith('.' + domain);
     });
   } catch {
     return false;
