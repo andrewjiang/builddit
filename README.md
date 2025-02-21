@@ -8,63 +8,97 @@ Builddit provides a streamlined interface for browsing and interacting with buil
 
 ## Features
 
-### Completed Features
+### Core Features
+- Browse build requests from `/someone-build` channel
+  - View text posts with author information
+  - Sort by Newest and Top (Day, Week, Month, All)
+  - Real-time polling with graceful updates
+  - Search functionality
+- Authentication
+  - Sign in with Farcaster (Auth Kit integration)
+  - Public browsing without authentication
+  - Success state feedback
+- Image Handling
+  - Whitelisted domains support
+  - Safe image component
+  - Fallback for non-whitelisted sources
+- Data Management
+  - MongoDB integration
+  - Neynar API integration
 
-- [x] Browse build requests from `/someone-build` channel
-  - [x] View text posts with author information
-  - [x] Sort by Newest and Top (Day, Week, Month, All)
-  - [x] Real-time polling with graceful updates
-  - [x] Search functionality
-- [x] Authentication
-  - [x] Sign in with Farcaster (Auth Kit integration)
-  - [x] Public browsing without authentication
-  - [x] Success state feedback
-- [x] Image Handling
-  - [x] Whitelisted domains support
-  - [x] Safe image component
-  - [x] Fallback for non-whitelisted sources
-- [x] Data Management
-  - [x] MongoDB integration
-  - [x] Neynar API integration
-  - [x] Efficient polling and caching
-  - [x] User profile syncing
-- [x] Build Claims
-  - [x] Claims posted as quote casts
-  - [x] Multiple claims per build request
-  - [x] Automatic tagging of original poster
+## Tech Stack
 
-### In Progress
+- **Frontend**: Next.js 14, React 18, TailwindCSS
+- **Backend**: Next.js API Routes, MongoDB
+- **Authentication**: NextAuth.js, Farcaster Auth Kit
+- **APIs**: Neynar API for Farcaster integration
+- **Deployment**: Vercel
 
-- [ ] Authentication Improvements
-  - [x] Session persistence across refreshes
-  - [x] Better error handling
-  - [x] Automatic reconnection
-  - [ ] Smooth sign-out flow
-- [ ] Deployment & CI/CD
-  - [ ] Setup Digital Ocean app platform
-  - [ ] Configure custom domain and SSL
-  - [ ] Setup Github Actions workflow
-  - [ ] Add deployment documentation
+## Development Setup
 
-### Backlog Features
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/andrewjiang/builddit.git
+   cd builddit
+   ```
 
-- [ ] Advanced Sorting
-  - [ ] Trending/Hot posts algorithm
-  - [ ] Smart filtering
-  - [ ] Advanced search options
-- [ ] User Experience
-  - [x] Loading states and animations
-  - [x] Error boundaries and recovery
-  - [x] Responsive design improvements
-  - [ ] Smoother state transitions
-- [ ] Social Features
-  - [ ] Comment viewing/threading
-  - [ ] User profiles and activity
-  - [ ] Build request collections
-- [ ] Platform Features
-  - [ ] Token rewards system
-  - [ ] Notifications system
-  - [ ] Analytics dashboard
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Create a `.env` file with the following variables:
+   ```
+   # Neynar API Configuration
+   NEYNAR_API_KEY=your_api_key
+   NEYNAR_CLIENT_ID=your_client_id
+   NEYNAR_CHANNEL_ID=someone-build
+
+   # MongoDB
+   MONGODB_URI=your_mongodb_uri
+
+   # Next-Auth Configuration
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your_secret
+
+   # Farcaster Auth Configuration
+   NEXT_PUBLIC_RELAY_URL=https://relay.farcaster.xyz
+   NEXT_PUBLIC_RPC_URL=https://mainnet.optimism.io
+   NEXT_PUBLIC_DOMAIN=localhost:3000
+   NEXT_PUBLIC_SIWE_URI=http://localhost:3000/login
+   ```
+
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+## Deployment
+
+The project is deployed on Vercel. To deploy your own instance:
+
+1. Push your code to GitHub
+2. Import the repository in Vercel
+3. Configure environment variables in Vercel dashboard
+4. Deploy!
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## License
+
+MIT License
+
+## Links
+
+- Live Site: [https://someonebuild.fun](https://someonebuild.fun)
+- GitHub Repository: [https://github.com/andrewjiang/builddit](https://github.com/andrewjiang/builddit)
+- Farcaster Channel: [/someone-build](https://warpcast.com/~/channel/someone-build)
 
 ## Technical Architecture
 
