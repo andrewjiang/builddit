@@ -37,6 +37,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "*.empirebuilder.world",
+      },
+      {
+        protocol: "https",
+        hostname: "i.seadn.io",
       }
     ],
   },

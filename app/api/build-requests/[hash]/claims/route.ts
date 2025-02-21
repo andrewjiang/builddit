@@ -30,9 +30,11 @@ export async function POST(
 ) {
   try {
     const body = await request.json();
+    console.log("Received body:", body);
     const { description, projectUrl, author } = body;
 
     if (!description || !projectUrl || !author) {
+      console.log("Missing fields:", { description, projectUrl, author });
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 },
@@ -40,10 +42,12 @@ export async function POST(
     }
 
     await connectToDatabase();
+    console.log("Connected to database");
 
     // Verify build request exists
     const buildRequest = await BuildRequest.findOne({ hash: params.hash });
     if (!buildRequest) {
+      console.log("Build request not found:", params.hash);
       return NextResponse.json(
         { error: "Build request not found" },
         { status: 404 },

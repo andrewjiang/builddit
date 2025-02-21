@@ -434,35 +434,7 @@ export function BuildRequestCard({ buildRequest }: BuildRequestCardProps) {
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="group/claims relative hidden md:flex items-center">
-            <button
-              className="relative flex items-center space-x-1.5 rounded-lg bg-purple-700/50 
-                        px-2 py-1.5 text-sm text-purple-200 border border-purple-600/30
-                        hover:bg-purple-700/70 transition-all duration-200"
-            >
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>{(buildRequest as any).claimsCount || 0} Built</span>
-            </button>
-            {/* Tooltip */}
-            <div className="absolute bottom-full right-0 mb-1 hidden group-hover/claims:block">
-              <div className="bg-purple-900/90 backdrop-blur-sm text-purple-100 text-xs px-2 py-1 rounded-md whitespace-nowrap
-                            border border-purple-400/20 shadow-xl">
-                Number of people who built this
-              </div>
-            </div>
-          </div>
+
           <button
             onClick={handleBuildClick}
             className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 

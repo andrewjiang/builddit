@@ -26,7 +26,7 @@ export function SafeImage({
         rel="noopener noreferrer"
         className="text-purple-400 hover:text-purple-300 text-sm"
       >
-        View external image
+        View image
       </a>
     );
   }

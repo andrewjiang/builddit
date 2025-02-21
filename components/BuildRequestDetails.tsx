@@ -104,6 +104,7 @@ function isImageUrl(url: string): boolean {
   if (url.includes('openseauserdata.com')) return true;
   if (url.includes('i.imgur.com')) return true;
   if (url.includes('cdn.discordapp.com')) return true;
+  if (url.includes('i.seadn.io')) return true;
   
   // Google Docs image URLs
   if (url.includes('googleusercontent.com/docs')) return true;
@@ -119,13 +120,19 @@ function isImageUrl(url: string): boolean {
 
 export function BuildRequestDetails({
   buildRequest,
-  claims,
+  claims: initialClaims,
 }: BuildRequestDetailsProps) {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const { data: session } = useSession();
+  const [claims, setClaims] = useState(initialClaims);
+
+  const handleClaimSubmitted = (newClaim: any) => {
+    console.log("New claim submitted:", newClaim);
+    setClaims((prevClaims) => [newClaim, ...prevClaims]);
+  };
 
   const handleBuildClick = () => {
     if (!session?.user) {
@@ -310,20 +317,11 @@ export function BuildRequestDetails({
                 key={claim.castHash}
                 className="bg-purple-800/30 rounded-xl p-6 shadow-xl backdrop-blur-sm border border-purple-700/50"
               >
-                <div className="flex items-center mb-4">
-                  {claim.author.pfpUrl && (
-                    <SafeImage
-                      src={claim.author.pfpUrl}
-                      alt={claim.author.username}
-                      className="w-8 h-8 rounded-full mr-3"
-                    />
-                  )}
-                  <div>
-                    <h3 className="font-semibold text-purple-100">
-                      {claim.author.displayName}
-                    </h3>
-                    <p className="text-purple-300">@{claim.author.username}</p>
-                  </div>
+                <div className="flex flex-col mb-4">
+                  <h3 className="font-semibold text-purple-100">
+                    {claim.author.displayName}
+                  </h3>
+                  <p className="text-purple-300">@{claim.author.username}</p>
                 </div>
                 <p className="text-purple-100 whitespace-pre-wrap break-words overflow-hidden overflow-wrap-anywhere">
                   {claim.text}
@@ -339,8 +337,6 @@ export function BuildRequestDetails({
           message="Sign in with Farcaster to submit your build"
         />
         <ClaimBuildModal
-          isOpen={isClaimModalOpen}
-          onClose={() => setIsClaimModalOpen(false)}
           buildRequest={{
             object: "cast",
             hash: buildRequest.hash,
@@ -352,12 +348,22 @@ export function BuildRequestDetails({
             text: buildRequest.text,
             timestamp: buildRequest.timestamp,
             embeds: buildRequest.embeds,
-            reactions: buildRequest.reactions,
-            replies: buildRequest.replies,
-            mentioned_profiles: buildRequest.mentioned_profiles,
+            reactions: {
+              likes_count: "reactions" in buildRequest ? buildRequest.reactions.likes_count : (buildRequest as any).engagement?.likes || 0,
+              recasts_count: "reactions" in buildRequest ? buildRequest.reactions.recasts_count : (buildRequest as any).engagement?.recasts || 0,
+              likes: [],
+              recasts: []
+            },
+            replies: {
+              count: "replies" in buildRequest ? buildRequest.replies.count : (buildRequest as any).engagement?.replies || 0
+            },
+            mentioned_profiles: buildRequest.mentioned_profiles || [],
             author: buildRequest.author,
             channel: buildRequest.channel
           }}
+          isOpen={isClaimModalOpen}
+          onClose={() => setIsClaimModalOpen(false)}
+          onClaimSubmitted={handleClaimSubmitted}
         />
       </div>
     </div>

@@ -7,7 +7,8 @@ const WHITELISTED_DOMAINS = [
   ".googleusercontent.com",
   "docs.google.com",
   "media.firefly.land",
-  "empirebuilder.world"
+  "empirebuilder.world",
+  "i.seadn.io"
 ];
 
 export function isWhitelistedImageDomain(url: string): boolean {

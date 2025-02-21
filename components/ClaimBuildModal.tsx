@@ -5,19 +5,23 @@ import { Fragment } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { toast } from "react-hot-toast";
+import { useSession } from "next-auth/react";
 
 interface ClaimBuildModalProps {
   buildRequest: BuildRequest;
   isOpen: boolean;
   onClose: () => void;
+  onClaimSubmitted?: (claim: any) => void;
 }
 
 export function ClaimBuildModal({
   buildRequest,
   isOpen,
   onClose,
+  onClaimSubmitted,
 }: ClaimBuildModalProps) {
-  const { isAuthenticated, profile } = useAuth();
+  const { data: session } = useSession();
+  const { profile } = useAuth();
   const [step, setStep] = useState<"form" | "preview">("form");
   const [projectUrl, setProjectUrl] = useState("");
   const [description, setDescription] = useState("");
@@ -36,9 +40,9 @@ export function ClaimBuildModal({
 
   useEffect(() => {
     async function fetchStoredUser() {
-      if (isAuthenticated && profile?.fid) {
+      if (session?.user?.fid) {
         try {
-          const response = await fetch(`/api/users/${profile.fid}`);
+          const response = await fetch(`/api/users/${session.user.fid}`);
           if (response.ok) {
             const userData = await response.json();
             setStoredUser(userData);
@@ -52,7 +56,7 @@ export function ClaimBuildModal({
     if (isOpen) {
       fetchStoredUser();
     }
-  }, [isAuthenticated, profile?.fid, isOpen]);
+  }, [session?.user?.fid, isOpen]);
 
   if (!isOpen) return null;
 
@@ -86,16 +90,35 @@ export function ClaimBuildModal({
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("Form submission started");
     e.preventDefault();
-    if (!isAuthenticated || !profile) return;
+    console.log("Session state:", { session });
+    
+    if (!session?.user) {
+      console.log("Not authenticated, no session user found");
+      return;
+    }
 
     if (!validateUrl(projectUrl)) {
+      console.log("URL validation failed:", projectUrl);
       setUrlError("Please enter a valid URL");
       return;
     }
 
+    console.log("Validation passed, proceeding with submission");
     setIsSubmitting(true);
     try {
+      console.log("Submitting form with data:", {
+        projectUrl,
+        description,
+        author: {
+          fid: session.user.fid,
+          username: session.user.username,
+          displayName: session.user.name || session.user.username,
+          pfpUrl: session.user.image,
+        },
+      });
+
       const response = await fetch(
         `/api/build-requests/${buildRequest.hash}/claims`,
         {
@@ -107,25 +130,31 @@ export function ClaimBuildModal({
             projectUrl,
             description,
             author: {
-              fid: profile.fid,
-              username: profile.username,
-              displayName: profile.displayName || profile.username,
-              pfpUrl: profile.pfp?.url,
+              fid: session.user.fid,
+              username: session.user.username,
+              displayName: session.user.name || session.user.username,
+              pfpUrl: session.user.image,
             },
           }),
         },
       );
 
       if (!response.ok) {
-        throw new Error("Failed to submit claim");
+        const errorData = await response.json();
+        console.error("Server error response:", errorData);
+        throw new Error(errorData.error || "Failed to submit claim");
       }
 
       const data = await response.json();
+      console.log("Submission successful:", data);
       setSubmittedClaim(data.claim);
+      if (onClaimSubmitted) {
+        onClaimSubmitted(data.claim);
+      }
       setStep("preview");
     } catch (error) {
       console.error("Error submitting claim:", error);
-      toast.error("Failed to submit build claim");
+      toast.error(error instanceof Error ? error.message : "Failed to submit build claim");
     } finally {
       setIsSubmitting(false);
     }
@@ -268,6 +297,7 @@ export function ClaimBuildModal({
                         </button>
                         <button
                           type="submit"
+                          onClick={() => console.log("Submit button clicked")}
                           disabled={isSubmitting || !!urlError}
                           className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg 
                                                              bg-gradient-to-r from-emerald-400 to-emerald-300 p-[2px] font-medium text-emerald-900 
