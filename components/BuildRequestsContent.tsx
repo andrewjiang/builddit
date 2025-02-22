@@ -187,9 +187,9 @@ export function BuildRequestsContent({
         }}
       />
 
-      <div className="max-w-[1024px] mx-auto px-4 md:px-8">
-        {/* Header */}
-        <header className="relative bg-purple-900 border-b border-purple-700/50">
+      {/* Header */}
+      <header className="w-full bg-purple-900 border-b border-purple-700/50">
+        <div className="max-w-[1024px] mx-auto px-4 md:px-8">
           <div className="relative py-4">
             <div className="flex flex-col">
               {/* Logo, Title, and Mobile Menu Row */}
@@ -342,8 +342,10 @@ export function BuildRequestsContent({
               </div>
             </div>
           </div>
-        </header>
+        </div>
+      </header>
 
+      <div className="max-w-[1024px] mx-auto px-4 md:px-8">
         {/* Main Content */}
         <main className="py-8">
           {/* Filter Bar */}
@@ -397,9 +399,11 @@ export function BuildRequestsContent({
           isOpen={isPostModalOpen}
           onClose={() => setIsPostModalOpen(false)}
         />
+      </div>
 
-        {/* Footer */}
-        <footer className="relative bg-purple-900 border-t border-purple-700/50 py-8 mt-12">
+      {/* Footer */}
+      <footer className="w-full bg-purple-900 border-t border-purple-700/50 py-8 mt-12">
+        <div className="max-w-[1024px] mx-auto px-4 md:px-8">
           <div className="relative text-center">
             <p className="text-purple-200/80 font-medium">
               Built by{" "}
@@ -423,8 +427,8 @@ export function BuildRequestsContent({
               community
             </p>
           </div>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </div>
   );
 }

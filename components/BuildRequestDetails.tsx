@@ -154,27 +154,33 @@ export function BuildRequestDetails({
           background: `radial-gradient(circle 400px at ${mousePosition.x}px ${mousePosition.y}px, rgba(250, 204, 21, 0.15), transparent 80%)`,
         }}
       />
-      <div className="max-w-[1024px] mx-auto px-4 md:px-8 py-8">
-        <Link
-          href="/"
-          className="text-purple-200 hover:text-white mb-4 inline-flex items-center transition-colors"
-        >
-          <svg
-            className="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
-            />
-          </svg>
-          Back to Build Requests
-        </Link>
 
+      {/* Header */}
+      <header className="w-full bg-purple-900 border-b border-purple-700/50">
+        <div className="max-w-[1024px] mx-auto px-4 md:px-8 py-4">
+          <Link
+            href="/"
+            className="text-purple-200 hover:text-white inline-flex items-center transition-colors"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back to Build Requests
+          </Link>
+        </div>
+      </header>
+
+      <div className="max-w-[1024px] mx-auto px-4 md:px-8 py-8">
         <div className="bg-purple-800/30 rounded-xl p-6 mb-8 shadow-xl backdrop-blur-sm border border-purple-700/50">
           <div className="flex items-center mb-4">
             {buildRequest.author.pfp_url && (
@@ -424,6 +430,35 @@ export function BuildRequestDetails({
           onClose={() => setIsBountyModalOpen(false)}
         />
       </div>
+
+      {/* Footer */}
+      <footer className="w-full bg-purple-900 border-t border-purple-700/50 py-8 mt-12">
+        <div className="max-w-[1024px] mx-auto px-4 md:px-8">
+          <div className="relative text-center">
+            <p className="text-purple-200/80 font-medium">
+              Built by{" "}
+              <a
+                href="https://warpcast.com/ok"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-yellow-400 hover:text-yellow-300 transition-colors"
+              >
+                @ok
+              </a>{" "}
+              for the{" "}
+              <a
+                href="https://warpcast.com/~/channel/someone-build"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-yellow-400 hover:text-yellow-300 transition-colors"
+              >
+                /someone-build
+              </a>{" "}
+              community
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -47,6 +47,10 @@ export async function GET(request: Request) {
       // Determine time window based on sort option
       const now = new Date();
       const timeWindow = sort.startsWith("top_") ? sort.split("_")[1] : null;
+      console.log("\n=== Sorting Configuration ===");
+      console.log("Sort option:", sort);
+      console.log("Time window:", timeWindow);
+
       const timeWindowMs = timeWindow
         ? {
             day: 24 * 60 * 60 * 1000, // 1 day
@@ -78,6 +82,9 @@ export async function GET(request: Request) {
         }
       }
 
+      console.log("\n=== MongoDB Query ===");
+      console.log("Query:", JSON.stringify(query, null, 2));
+
       // Add search filter
       if (search) {
         query.$or = [
@@ -97,10 +104,20 @@ export async function GET(request: Request) {
               publishedAt: -1,
             };
 
+      console.log("Sort order:", sortOrder);
+
       const mongoResults = await BuildRequest.find(query)
         .sort(sortOrder)
         .limit(limit + 1)
         .lean();
+
+      console.log("\n=== Query Results ===");
+      console.log("Total results:", mongoResults.length);
+      console.log("Sample results (first 3):", mongoResults.slice(0, 3).map(doc => ({
+        hash: doc.hash,
+        publishedAt: doc.publishedAt,
+        engagement: doc.engagement,
+      })));
 
       buildRequests = (mongoResults as MongoDBBuildRequest[]).map((doc) => {
         const publishedAt =
@@ -134,6 +151,9 @@ export async function GET(request: Request) {
         const lastItem = buildRequests[buildRequests.length - 2];
         nextCursor = lastItem.publishedAt.toISOString();
         buildRequests = buildRequests.slice(0, -1);
+        console.log("\n=== Pagination ===");
+        console.log("Next cursor:", nextCursor);
+        console.log("Final results count:", buildRequests.length);
       }
 
       return NextResponse.json({
