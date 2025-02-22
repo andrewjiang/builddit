@@ -132,7 +132,7 @@ export async function fetchTopBuildRequests(
 
     console.log("\n=== Sorted Results ===");
     console.log("Final results count:", sortedRequests.length);
-    console.log("Sample scores (first 3):", sortedRequests.slice(0, 3).map(req => ({
+    console.log("Sample scores (first 3):", sortedRequests.slice(0, 3).map((req: BuildRequest) => ({
       hash: req.hash,
       score: req.reactions.likes_count + req.reactions.recasts_count,
       publishedAt: req.timestamp
