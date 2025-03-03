@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "@farcaster/auth-kit/styles.css";
 import { Providers } from "@/components/Providers";
+import { Footer } from "./components/Footer";
 import type { Metadata } from "next";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -55,7 +56,14 @@ export default function RootLayout({
   return (
     <html lang="en" data-oid="-c7jvc_">
       <body className={inter.className} data-oid="czgqetj">
-        <Providers data-oid="foq03zf">{children}</Providers>
+        <Providers data-oid="foq03zf">
+          <div className="flex flex-col min-h-screen">
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </Providers>
       </body>
     </html>
   );
